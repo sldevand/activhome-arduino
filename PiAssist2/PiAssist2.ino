@@ -34,7 +34,7 @@
 //cc1101/chacon/14549858/2/0/
 //#define DEBUG_MEM
 //#define SERIAL_PRINT
-#define VERSION "2.1.4"
+#define VERSION "2.1.5"
 #include "domusbox_config.h"
 #include "structures.h"
 #include "Timer.h"
