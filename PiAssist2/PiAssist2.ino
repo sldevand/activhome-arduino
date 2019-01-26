@@ -2,7 +2,7 @@
    Project Name : PiAssist2
    By : Sébastien LORRAIN
    Date : 02/03/2018
-   Version : 2.1.4
+   Version : 2.1.5
    Description :
    A brancher en USB sur le Raspberry Pi de la box domotique DIY DomusBox
    Sert à gérer la RF pour le projet de box domotique DIY DomusBox
@@ -313,10 +313,9 @@ void checkCommands(char* buf) {
              dayPlanPut(THERMOSTAT_TYPE);
             }
 
-            //nrf24/node/2Nodw/ther/put/rtc/2018/02/15/15/34/22/
-            if (strcmp(utils->m_tabString[5], KEY_RTC) == 0) {
-             
-               RTCPut();
+            //nrf24/node/2Nodw/ther/put/rtc/6/2018/02/15/15/34/22/
+            if (strcmp(utils->m_tabString[5], KEY_RTC) == 0) {             
+               RTCTherPut();
             }
           }
           //nrf24/node/2Nodw/ther/save/
@@ -418,10 +417,20 @@ void checkCommands(char* buf) {
     }
 
   }
-
-
   //utils->showTabstring();
   displayFreemem();
+}
+
+void RTCTherPut(){
+  tmElements_t tm;
+  tm.Wday = atoi(utils->m_tabString[6]);  
+  tm.Year = CalendarYrToTm(atoi(utils->m_tabString[7]));
+  tm.Month = atoi(utils->m_tabString[8]);
+  tm.Day = atoi(utils->m_tabString[9]);
+  tm.Hour = atoi(utils->m_tabString[10]);
+  tm.Minute = atoi(utils->m_tabString[11]);
+  tm.Second = atoi(utils->m_tabString[12]);
+  sensors24->radioTransmit(tm);  
 }
 
 void RTCPut(){            
@@ -435,8 +444,7 @@ void RTCPut(){
   sensors24->radioTransmit(tm);  
 }
 
-void dayPlanPut(uint8_t type){         
-  
+void dayPlanPut(uint8_t type){ 
 
   switch(type){
     case THERMOSTAT_TYPE:{
@@ -459,12 +467,10 @@ void dayPlanPut(uint8_t type){
       strcpy(sensors24->m_dayplan.heure2Stop, " ");      
       break;
     }
-
     default:{
       return;
-    }
-    
-  } 
+    }   
+  }
   
   sensors24->radioTransmit(sensors24->m_dayplan);
 }
@@ -601,6 +607,8 @@ void bindRTC() {
   tmElements_t tm = sensors24->m_rtc;
   Serial.print(lastRTCasked);
   Serial.print(F("clock "));
+  Serial.print(tm.Wday);  
+  Serial.write(' ');
   Serial.print(tmYearToCalendar(tm.Year));
   Serial.write('/');
   print2digits(tm.Month);
@@ -613,7 +621,7 @@ void bindRTC() {
   print2digits(tm.Second);
   Serial.println("");
   delay(100);
-  displayFreemem();
+
 }
 void print2digits(int number) {
   if (number >= 0 && number < 10) {
@@ -633,15 +641,9 @@ void bindMessage() {
   bt->CR();
   delay(100);
   bt-> m_serialPrint = false;
-  displayFreemem();
-
 }
 
-
-
-
 void sensors433RadioReceive() {
-
   if (cc1101->radioReceive() && cc1101->bufIsOk) {
     bt->m_serialPrint = true;
     String bufString = String(cc1101->m_sensor.id) + " " + String(cc1101->m_sensor.temp.valFloat);
@@ -657,4 +659,3 @@ void sensors433RadioRawReceive() {
     Serial.println((char*)cc1101->bufRaw);
   }
 }
-

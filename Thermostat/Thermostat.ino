@@ -594,6 +594,3 @@ tmElements_t readRTC() {
   clkMan.display();
   return tm;
 }
-
-
-
