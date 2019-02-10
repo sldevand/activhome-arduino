@@ -99,8 +99,9 @@ WeekPlan PlanningsManager::getDefaultWeekPlan(){
 DayPlan PlanningsManager::getDayPlan(uint8_t jour){
 	
 	DayPlan dp;	
-	dp.jour=0;
+	dp.jour=7;
 
+    if(jour==0) jour=7;
 	for(int day=0;day<WEEK_LEN;day++){
 		if(this->weekPlan.dayPlans[day].jour==jour){
 			return this->weekPlan.dayPlans[day];
