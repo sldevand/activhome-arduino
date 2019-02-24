@@ -34,7 +34,7 @@
 #define DHTPIN 4
 #define DHTTYPE DHT22
 #define R_PIPE 1
-#define VERSION 1.2
+#define VERSION 1.21
 
 
 #define METH_GET "get"
@@ -103,19 +103,6 @@ void setup() {
   dht.begin();
   Serial.println("Setup OK");
   checkPlanTime();
-  //TEST
-  /*  Mode modes[MODES_LEN];
-
-    float consignes[MODES_LEN]={24.0,17.0,12.0,10.0};
-    float deltas[MODES_LEN]={0.4,1.2,0.7,1.8};
-    for(byte i=0;i<MODES_LEN;i++){
-      modes[i].id=i+1;
-      modes[i].consigne=consignes[i];
-      modes[i].delta=deltas[i];
-      modMan.addMode(modes[i]);
-    }
-  */
-  //modMan.displayModes();
 }
 
 void checkPlanTime() {
@@ -198,7 +185,7 @@ void loop(void) {
   radioRead();
 
   if (delayedInfos) {
-    t.after(200, sendAllCallback);
+    t.after(300, sendAllCallback);
     delayedInfos = false;
   }
 
@@ -371,16 +358,15 @@ bool bindCommande() {
   if (strcmp(commande.meth, METH_SAVE) == 0) {
     //PLAN
     if (strcmp(commande.key, KEY_PLAN) == 0) {
-      delayedInfos = false;
+      delayedInfos = true;
       plMan.savePlanningInEEPROM();
       plMan.displayPlanning();
-      
       sendMessage("tht spok");
     }
 
     //MODE
     if (strcmp(commande.key, KEY_MODE) == 0) {
-      delayedInfos = false;
+      delayedInfos = true;
       modMan.saveModesInEEPROM();
       modMan.displayModes();
       sendMessage("tht smok");
@@ -397,10 +383,6 @@ bool bindDayplan() {
   radio.read( &dp, sizeof(DayPlan));
   plMan.setDayPlan(dp);
   
-  /*plMan.displayPlanning();
-    plMan.savePlanningInEEPROM();*/
-
-
   startTimer();
   return true;
 }
