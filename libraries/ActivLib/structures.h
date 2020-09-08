@@ -13,7 +13,7 @@
 #define MESSAGE_LEN 10
 
 #define MIN_CONS 9.0
-#define MAX_CONS 24.0
+#define MAX_CONS 30.0
 #define MIN_DELTA 0.3
 #define MAX_DELTA 2.0
 
