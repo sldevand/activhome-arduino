@@ -645,18 +645,24 @@ void bindMessage() {
 }
 
 void sensors433RadioReceive() {
-  if (cc1101->radioReceive() && cc1101->bufIsOk) {
-    bt->m_serialPrint = true;
-    String bufString = String(cc1101->m_sensor.id) + " " + String(cc1101->m_sensor.temp.valFloat);
-    bt->logString(bufString);
-    bt->m_serialPrint = false;
+    if (!cc1101->hasMessage()) {
+      return;
+    }
+    Sensor sensor = cc1101->radioRawReceive();
+
+    String mergedString = "";
+    bt-> m_serialPrint = true;
+    mergedString = sensor.id;
+    mergedString += " ";
+    mergedString += String(sensor.temp);
+    
+    if (sensor.hygro >= 0) {
+      mergedString += " ";
+      mergedString += String(sensor.hygro);    
+    }
+    bt->logString(mergedString);
     bt->CR();
-  }
-}
-void sensors433RadioRawReceive() {
-
-  if (cc1101->radioRawReceive()) {
-
-    Serial.println((char*)cc1101->bufRaw);
-  }
+    delay(100);
+    bt-> m_serialPrint = false;
+    displayFreemem();  
 }
