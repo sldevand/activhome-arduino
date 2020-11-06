@@ -79,6 +79,7 @@ void setup() {
   cc1101->initChacon(14549858);
   delay(LONG_DELAY);
   cc1101->initRF433Sensors();
+  cc1101->SetReceive();
   delay(LONG_DELAY);
   digitalWrite(CSNCC11_PIN, HIGH);
   Serial.println(F("OK!"));
