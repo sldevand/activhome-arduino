@@ -5,30 +5,28 @@
 #include <stdio.h>
 #include <string.h>
 
-#define MAX_TOKEN_SIZE 9
-
+#define MAX_TOKEN_SIZE 14
 
 class Utils
 {
-	
-	public:
+public:
+	void splitString(char strBuf[], char separator[]);
+	void showTabstring();
+	void decomposeRaw(char *str);
 
-		void splitString(char strBuf[],char separator[]);				
-		void showTabstring();			
-		void decomposeRaw(char*str);
+	template <typename T>
+	void logv(T str, bool ln)
+	{
+#ifdef SERIAL_PRINT
+		Serial.print(str);
+		if (ln)
+			Serial.println("");
+#endif
+	}
 
-		template <typename T>
-		void logv(T str,bool ln){
-		  #ifdef SERIAL_PRINT
-		    Serial.print(str);
-		    if(ln) Serial.println("");
-		  #endif
-		  
-		}
+	//MEMBERS
 
-		//MEMBERS
- 	
-		int m_counter;	
-		char* m_tabString[MAX_TOKEN_SIZE];		
-};	
+	int m_counter;
+	char *m_tabString[MAX_TOKEN_SIZE];
+};
 #endif

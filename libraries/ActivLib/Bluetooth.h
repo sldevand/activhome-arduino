@@ -10,7 +10,7 @@ class Bluetooth{
 	
 	//CTOR && DTOR	
 	Bluetooth();
-	Bluetooth(long baudRate);
+	explicit Bluetooth(long baudRate);
 	Bluetooth(int rxPin,int txPin);
 	Bluetooth(int rxPin,int txPin,long baudRate);
 	Bluetooth(int rxPin,int txPin,int atPin,long baudRate);

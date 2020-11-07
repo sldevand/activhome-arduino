@@ -7,8 +7,6 @@
 #include <printf.h>
 #include <MemoryFree.h>
 
-
-
 #include "domusbox_defines.h"
 
 /****PINOUT SETTING****/
@@ -21,7 +19,3 @@ const byte servoYPin=6;  //declaration constante de broche axe Y
 const uint16_t CE_PIN=8;
 const uint16_t CSN_PIN=9;
 const byte CSNCC11_PIN=10;
- 
-
-
-
