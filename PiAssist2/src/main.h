@@ -1,8 +1,8 @@
 /*
    Project Name : PiAssist2
    By : Sébastien LORRAIN
-   Date : 02/03/2018
-   Version : 2.1.5
+   Date : 07/11/2020
+   Version : 2.2.0
    Description :
    A brancher en USB sur le Raspberry Pi de la box domotique DIY DomusBox
    Sert à gérer la RF pour le projet de box domotique DIY DomusBox
