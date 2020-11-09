@@ -26,15 +26,15 @@
    - Gestion du Bluetooth
       librairies utilisées : SoftwareSerial.h (officielle Arduino IDE)
       source : https://www.arduino.cc/en/Reference/softwareSerial
-   ------------------------------------------------------------------------------------------------
-   - Gestion de Servo-Moteurs
 
 */
 //cc1101/chacon/14549858/2/1/
 //cc1101/chacon/14549858/2/0/
 //#define DEBUG_MEM
 //#define SERIAL_PRINT
-#define VERSION "2.1.5"
+//#define LISTENER_MODE
+#define VERSION "2.2.0"
+
 #include "domusbox_config.h"
 #include "structures.h"
 #include "Timer.h"
@@ -47,7 +47,6 @@ RF24Sensors *sensors24;
 MyCC1101 *cc1101;
 Utils *utils;
 Timer t;
-char lastRTCasked[5];
 
 void displayFreemem();
 void serialEvent();
@@ -55,7 +54,7 @@ void checkBluetoothBuffer();
 void checkCommands(char *buf);
 void RTCTherPut();
 void RTCPut();
-void dayPlanPut(uint8_t type);
+void dayPlanPut();
 void sensors24RadioReceive();
 void bindSensor();
 void bindThermostat();
