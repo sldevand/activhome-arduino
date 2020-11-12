@@ -1,8 +1,8 @@
 /*
    Project Name : PiAssist2
    By : Sébastien LORRAIN
-   Date : 07/11/2020
-   Version : 2.2.0
+   Date : 12/11/2020
+   Version : 2.2.2
    Description :
    A brancher en USB sur le Raspberry Pi de la box domotique DIY DomusBox
    Sert à gérer la RF pour le projet de box domotique DIY DomusBox
@@ -22,18 +22,12 @@
    - Gestion des prises RF433 Chacon IO
      librairies utilisées : adaptée du fichier radioEmission.cpp dans le zip 'hcc.zip' de idleman :
      source : http://idleman.fr/ressources/PHP/hcc/hcc.zip
+     cc1101/chacon/14549858/2/1/
+     cc1101/chacon/14549858/2/0/
    ------------------------------------------------------------------------------------------------
-   - Gestion du Bluetooth
-      librairies utilisées : SoftwareSerial.h (officielle Arduino IDE)
-      source : https://www.arduino.cc/en/Reference/softwareSerial
-
 */
-//cc1101/chacon/14549858/2/1/
-//cc1101/chacon/14549858/2/0/
-//#define DEBUG_MEM
-//#define SERIAL_PRINT
-//#define LISTENER_MODE
-#define VERSION "2.2.0"
+
+#define VERSION "2.2.2"
 
 #include "domusbox_config.h"
 #include "structures.h"
@@ -42,7 +36,6 @@
 #define MAX_BUF_LEN 64
 
 /****OBJECTS*****/
-Bluetooth *bt;
 RF24Sensors *sensors24;
 MyCC1101 *cc1101;
 Utils *utils;
@@ -56,7 +49,6 @@ void RTCTherPut();
 void RTCPut();
 void dayPlanPut();
 void sensors24RadioReceive();
-void bindSensor();
 void bindThermostat();
 void bindThermostat2();
 void bindMode();
@@ -65,3 +57,4 @@ void bindRTC();
 void print2digits(int number);
 void bindMessage();
 void sensors433RadioReceive();
+void displaySensor(Sensor sensor);

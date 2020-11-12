@@ -10,13 +10,12 @@ void setup()
 
     //Serial and pins init
     Serial.begin(9600);
-    while (!Serial);
+    while (!Serial)
+        ;
     Serial.print("PiAssist ");
     Serial.print("v");
     Serial.println(VERSION);
     delay(SHORT_DELAY);
-    bt = new Bluetooth();
-    delay(LONG_DELAY);
 
     delay(DEFAULT_DELAY);
     sensors24 = new RF24Sensors(CE_PIN, CSN_PIN);
@@ -26,6 +25,9 @@ void setup()
     delay(SHORT_DELAY);
     cc1101->initChacon(14549858);
     delay(LONG_DELAY);
+    cc1101->initRF433Sensors();
+    cc1101->SetReceive();
+    delay(LONG_DELAY);
     digitalWrite(CSNCC11_PIN, HIGH);
     Serial.println("OK!");
     delay(DEFAULT_DELAY);
@@ -33,6 +35,7 @@ void setup()
 
 void loop()
 {
+    sensors433RadioReceive();
     sensors24RadioReceive();
     t.update();
 }
@@ -71,165 +74,156 @@ void checkCommands(char *buf)
             cc1101->startRadio();
         }
     }
-    else
+
+    //--------->NRF24L01<-----------
+    if (strcmp(utils->m_tabString[0], MDL_NRF24) == 0)
     {
-        //--------->NRF24L01<-----------
-        if (strcmp(utils->m_tabString[0], MDL_NRF24) == 0)
+        ComStruct command;
+        if (strcmp(utils->m_tabString[1], KEY_INIT) == 0)
         {
-            ComStruct command;
-            if (strcmp(utils->m_tabString[1], KEY_INIT) == 0)
-            {
-                sensors24->setupRadio();
-            }
-            if (strcmp(utils->m_tabString[1], KEY_TEST) == 0)
-            {
-                printf_begin();
-                sensors24->printDetails();
-            }
-            if (strcmp(utils->m_tabString[1], PRT_NODE) == 0 && utils->m_counter > 4)
-            {
-                byte writingPipe[6];
-                for (int i = 0; i < 6; i++)
-                {
-                    writingPipe[i] = utils->m_tabString[2][i];
-                }
-
-                sensors24->openWritingPipe(writingPipe);
-                //nrf24/node/2Nodw/ther/
-                if (strcmp(utils->m_tabString[3], PRT_THERM) == 0)
-                {
-                    //nrf24/node/2Nodw/ther/set/
-                    if (strcmp(utils->m_tabString[4], METH_SET) == 0)
-                    {
-                        //nrf24/node/2Nodw/ther/set/cons/19/
-                        if (strcmp(utils->m_tabString[5], KEY_CONSIGN) == 0)
-                        {
-                            sensors24->m_thermostat.consigne = atof(utils->m_tabString[6]);
-                            sensors24->radioTransmit(sensors24->m_thermostat);
-                        }
-                        //nrf24/node/2Nodw/ther/set/delta/0.7/
-                        if (strcmp(utils->m_tabString[5], KEY_DELTA) == 0)
-                        {
-                            sensors24->m_thermostat.delta = atof(utils->m_tabString[6]);
-                            sensors24->radioTransmit(sensors24->m_thermostat);
-                        }
-                        //nrf24/node/2Nodw/ther/set/temp/19.5/
-                        if (strcmp(utils->m_tabString[5], KEY_TEMP) == 0)
-                        {
-                            sensors24->m_thermostat.tempExt = atof(utils->m_tabString[6]);
-                            sensors24->radioTransmit(sensors24->m_thermostat);
-                        }
-                        //nrf24/node/2Nodw/ther/set/int/1/
-                        if (strcmp(utils->m_tabString[5], KEY_INTERNE) == 0)
-                        {
-                            sensors24->m_thermostat.interne = atoi(utils->m_tabString[6]);
-                            sensors24->radioTransmit(sensors24->m_thermostat);
-                        }
-
-                        //nrf24/node/2Nodw/ther/set/plan/1/
-                        if (strcmp(utils->m_tabString[5], KEY_PLAN) == 0)
-                        {
-                            sensors24->m_thermostat.plan = atoi(utils->m_tabString[6]);
-                            sensors24->radioTransmit(sensors24->m_thermostat);
-                        }
-                    }
-                    //nrf24/node/2Nodw/ther/get/
-                    if (strcmp(utils->m_tabString[4], METH_GET) == 0)
-                    {
-                        strcpy(command.meth, METH_GET);
-
-                        //nrf24/node/2Nodw/ther/get/info/
-                        if (strcmp(utils->m_tabString[5], KEY_INFO) == 0)
-                        {
-                            strcpy(command.key, KEY_INFO);
-                            sensors24->radioTransmit(command);
-                        }
-                        //nrf24/node/2Nodw/ther/get/mode/1/
-                        if (strcmp(utils->m_tabString[5], KEY_MODE) == 0)
-                        {
-                            strcpy(command.key, KEY_MODE);
-                            strcpy(command.buf, utils->m_tabString[6]);
-                            sensors24->radioTransmit(command);
-                        }
-
-                        //nrf24/node/2Nodw/ther/get/plan/1/
-                        if (strcmp(utils->m_tabString[5], KEY_PLAN) == 0)
-                        {
-                            strcpy(command.key, KEY_PLAN);
-                            strcpy(command.buf, utils->m_tabString[6]);
-                            sensors24->radioTransmit(command);
-                        }
-                        //nrf24/node/2Nodw/ther/get/rtc/
-                        if (strcmp(utils->m_tabString[5], KEY_RTC) == 0)
-                        {
-                            strcpy(command.key, KEY_RTC);
-                            sensors24->radioTransmit(command);
-                        }
-                    }
-                    //nrf24/node/2Nodw/ther/sel/
-                    if (strcmp(utils->m_tabString[4], METH_SEL) == 0)
-                    {
-                        strcpy(command.meth, METH_SEL);
-                        //nrf24/node/2Nodw/ther/sel/mode/1/
-                        if (strcmp(utils->m_tabString[5], KEY_MODE) == 0)
-                        {
-                            strcpy(command.key, KEY_MODE);
-                            strcpy(command.buf, utils->m_tabString[6]);
-                            sensors24->radioTransmit(command);
-                        }
-                    }
-
-                    //nrf24/node/2Nodw/ther/put/
-                    if (strcmp(utils->m_tabString[4], METH_PUT) == 0)
-                    {
-                        //nrf24/node/2Nodw/ther/put/mode/4/23.5/0.7/
-                        if (strcmp(utils->m_tabString[5], KEY_MODE) == 0)
-                        {
-                            Mode mode;
-                            mode.id = atoi(utils->m_tabString[6]);
-                            mode.consigne = atof(utils->m_tabString[7]);
-                            mode.delta = atof(utils->m_tabString[8]);
-                            sensors24->radioTransmit(mode);
-                        }
-
-                        //nrf24/node/2Nodw/ther/put/plan/2/1/3/06:00/23:00/XX:XX/XX:XX/
-                        if (strcmp(utils->m_tabString[5], KEY_PLAN) == 0)
-                        {
-                            dayPlanPut();
-                        }
-
-                        //nrf24/node/2Nodw/ther/put/rtc/6/2018/02/15/15/34/22/
-                        if (strcmp(utils->m_tabString[5], KEY_RTC) == 0)
-                        {
-                            RTCTherPut();
-                        }
-                    }
-                    //nrf24/node/2Nodw/ther/save/
-                    if (strcmp(utils->m_tabString[4], METH_SAVE) == 0)
-                    {
-                        strcpy(command.meth, METH_SAVE);
-                        //nrf24/node/2Nodw/ther/save/plan/
-                        if (strcmp(utils->m_tabString[5], KEY_PLAN) == 0)
-                        {
-                            strcpy(command.key, KEY_PLAN);
-                            sensors24->radioTransmit(command);
-                        }
-
-                        //nrf24/node/2Nodw/ther/save/mode/
-                        if (strcmp(utils->m_tabString[5], KEY_MODE) == 0)
-                        {
-                            strcpy(command.key, KEY_MODE);
-                            sensors24->radioTransmit(command);
-                        }
-                    }
-                }
-            }
+            sensors24->setupRadio();
         }
-        else
-        { //BLUETOOTH
-            if (strcmp(utils->m_tabString[0], MDL_BT) == 0 && strcmp(utils->m_tabString[1], KEY_VAL) == 0)
+        if (strcmp(utils->m_tabString[1], KEY_TEST) == 0)
+        {
+            printf_begin();
+            sensors24->printDetails();
+        }
+        if (strcmp(utils->m_tabString[1], PRT_NODE) == 0 && utils->m_counter > 4)
+        {
+            byte writingPipe[6];
+            for (int i = 0; i < 6; i++)
             {
-                bt->sendInt(atoi(utils->m_tabString[2]));
+                writingPipe[i] = utils->m_tabString[2][i];
+            }
+
+            sensors24->openWritingPipe(writingPipe);
+            //nrf24/node/2Nodw/ther/
+            if (strcmp(utils->m_tabString[3], PRT_THERM) == 0)
+            {
+                //nrf24/node/2Nodw/ther/set/
+                if (strcmp(utils->m_tabString[4], METH_SET) == 0)
+                {
+                    //nrf24/node/2Nodw/ther/set/cons/19/
+                    if (strcmp(utils->m_tabString[5], KEY_CONSIGN) == 0)
+                    {
+                        sensors24->m_thermostat.consigne = atof(utils->m_tabString[6]);
+                        sensors24->radioTransmit(sensors24->m_thermostat);
+                    }
+                    //nrf24/node/2Nodw/ther/set/delta/0.7/
+                    if (strcmp(utils->m_tabString[5], KEY_DELTA) == 0)
+                    {
+                        sensors24->m_thermostat.delta = atof(utils->m_tabString[6]);
+                        sensors24->radioTransmit(sensors24->m_thermostat);
+                    }
+                    //nrf24/node/2Nodw/ther/set/temp/19.5/
+                    if (strcmp(utils->m_tabString[5], KEY_TEMP) == 0)
+                    {
+                        sensors24->m_thermostat.tempExt = atof(utils->m_tabString[6]);
+                        sensors24->radioTransmit(sensors24->m_thermostat);
+                    }
+                    //nrf24/node/2Nodw/ther/set/int/1/
+                    if (strcmp(utils->m_tabString[5], KEY_INTERNE) == 0)
+                    {
+                        sensors24->m_thermostat.interne = atoi(utils->m_tabString[6]);
+                        sensors24->radioTransmit(sensors24->m_thermostat);
+                    }
+
+                    //nrf24/node/2Nodw/ther/set/plan/1/
+                    if (strcmp(utils->m_tabString[5], KEY_PLAN) == 0)
+                    {
+                        sensors24->m_thermostat.plan = atoi(utils->m_tabString[6]);
+                        sensors24->radioTransmit(sensors24->m_thermostat);
+                    }
+                }
+                //nrf24/node/2Nodw/ther/get/
+                if (strcmp(utils->m_tabString[4], METH_GET) == 0)
+                {
+                    strcpy(command.meth, METH_GET);
+
+                    //nrf24/node/2Nodw/ther/get/info/
+                    if (strcmp(utils->m_tabString[5], KEY_INFO) == 0)
+                    {
+                        strcpy(command.key, KEY_INFO);
+                        sensors24->radioTransmit(command);
+                    }
+                    //nrf24/node/2Nodw/ther/get/mode/1/
+                    if (strcmp(utils->m_tabString[5], KEY_MODE) == 0)
+                    {
+                        strcpy(command.key, KEY_MODE);
+                        strcpy(command.buf, utils->m_tabString[6]);
+                        sensors24->radioTransmit(command);
+                    }
+
+                    //nrf24/node/2Nodw/ther/get/plan/1/
+                    if (strcmp(utils->m_tabString[5], KEY_PLAN) == 0)
+                    {
+                        strcpy(command.key, KEY_PLAN);
+                        strcpy(command.buf, utils->m_tabString[6]);
+                        sensors24->radioTransmit(command);
+                    }
+                    //nrf24/node/2Nodw/ther/get/rtc/
+                    if (strcmp(utils->m_tabString[5], KEY_RTC) == 0)
+                    {
+                        strcpy(command.key, KEY_RTC);
+                        sensors24->radioTransmit(command);
+                    }
+                }
+                //nrf24/node/2Nodw/ther/sel/
+                if (strcmp(utils->m_tabString[4], METH_SEL) == 0)
+                {
+                    strcpy(command.meth, METH_SEL);
+                    //nrf24/node/2Nodw/ther/sel/mode/1/
+                    if (strcmp(utils->m_tabString[5], KEY_MODE) == 0)
+                    {
+                        strcpy(command.key, KEY_MODE);
+                        strcpy(command.buf, utils->m_tabString[6]);
+                        sensors24->radioTransmit(command);
+                    }
+                }
+
+                //nrf24/node/2Nodw/ther/put/
+                if (strcmp(utils->m_tabString[4], METH_PUT) == 0)
+                {
+                    //nrf24/node/2Nodw/ther/put/mode/4/23.5/0.7/
+                    if (strcmp(utils->m_tabString[5], KEY_MODE) == 0)
+                    {
+                        Mode mode;
+                        mode.id = atoi(utils->m_tabString[6]);
+                        mode.consigne = atof(utils->m_tabString[7]);
+                        mode.delta = atof(utils->m_tabString[8]);
+                        sensors24->radioTransmit(mode);
+                    }
+
+                    //nrf24/node/2Nodw/ther/put/plan/2/1/3/06:00/23:00/XX:XX/XX:XX/
+                    if (strcmp(utils->m_tabString[5], KEY_PLAN) == 0)
+                    {
+                        dayPlanPut();
+                    }
+
+                    //nrf24/node/2Nodw/ther/put/rtc/6/2018/02/15/15/34/22/
+                    if (strcmp(utils->m_tabString[5], KEY_RTC) == 0)
+                    {
+                        RTCTherPut();
+                    }
+                }
+                //nrf24/node/2Nodw/ther/save/
+                if (strcmp(utils->m_tabString[4], METH_SAVE) == 0)
+                {
+                    strcpy(command.meth, METH_SAVE);
+                    //nrf24/node/2Nodw/ther/save/plan/
+                    if (strcmp(utils->m_tabString[5], KEY_PLAN) == 0)
+                    {
+                        strcpy(command.key, KEY_PLAN);
+                        sensors24->radioTransmit(command);
+                    }
+
+                    //nrf24/node/2Nodw/ther/save/mode/
+                    if (strcmp(utils->m_tabString[5], KEY_MODE) == 0)
+                    {
+                        strcpy(command.key, KEY_MODE);
+                        sensors24->radioTransmit(command);
+                    }
+                }
             }
         }
     }
@@ -267,7 +261,7 @@ void sensors24RadioReceive()
     switch (payloadSize)
     {
     case sizeof(Sensor):
-        bindSensor();
+        displaySensor(sensors24->m_sensor);
         break;
     case sizeof(Thermostat):
         bindThermostat();
@@ -287,27 +281,8 @@ void sensors24RadioReceive()
     }
 }
 
-void bindSensor()
-{
-    bt->m_serialPrint = true;
-    String mergedString = sensors24->m_sensor.id;
-    mergedString += " ";
-    mergedString += String(sensors24->m_sensor.temp);
-
-    if (sensors24->m_sensor.hygro >= 0)
-    {
-        mergedString += " ";
-        mergedString += String(sensors24->m_sensor.hygro);
-    }
-    bt->logString(mergedString);
-    bt->CR();
-    delay(100);
-    bt->m_serialPrint = false;
-}
-
 void bindThermostat()
 {
-    bt->m_serialPrint = true;
     String mergedString = "thermostat ";
     mergedString += String(sensors24->m_thermostat.consigne);
     mergedString += " ";
@@ -318,8 +293,8 @@ void bindThermostat()
     mergedString += String(sensors24->m_thermostat.interne);
     mergedString += " ";
     mergedString += String(sensors24->m_thermostat.etat);
-    bt->logString(mergedString);
-    bt->CR();
+    Serial.println(mergedString);
+
     t.after(300, bindThermostat2);
 }
 
@@ -329,30 +304,27 @@ void bindThermostat2()
     mergedString += String(sensors24->m_thermostat.mode);
     mergedString += " ";
     mergedString += String(sensors24->m_thermostat.plan);
-    bt->logString(mergedString);
-    bt->CR();
+    Serial.println(mergedString);
+
     delay(100);
-    bt->m_serialPrint = false;
 }
 
 void bindMode()
 {
-    bt->m_serialPrint = true;
     String mergedString = "thermode ";
     mergedString += String(sensors24->m_mode.id);
     mergedString += " ";
     mergedString += String(sensors24->m_mode.consigne);
     mergedString += " ";
     mergedString += String(sensors24->m_mode.delta);
-    bt->logString(mergedString);
-    bt->CR();
+    Serial.println(mergedString);
+
     delay(100);
-    bt->m_serialPrint = false;
 }
 
 void bindDayplan()
 {
-    bt->m_serialPrint = true;
+
     String mergedString = "therplan ";
     mergedString += String(sensors24->m_dayplan.jour);
     mergedString += " ";
@@ -368,10 +340,9 @@ void bindDayplan()
     mergedString += " ";
     mergedString += String(sensors24->m_dayplan.heure2Stop);
 
-    bt->logString(mergedString);
-    bt->CR();
+    Serial.println(mergedString);
+
     delay(100);
-    bt->m_serialPrint = false;
 }
 
 void bindRTC()
@@ -404,13 +375,41 @@ void print2digits(int number)
 }
 void bindMessage()
 {
-    bt->m_serialPrint = true;
-
     String mergedString = "message ";
     mergedString += String(sensors24->m_message.buf);
 
-    bt->logString(mergedString);
-    bt->CR();
+    Serial.println(mergedString);
+
     delay(100);
-    bt->m_serialPrint = false;
+}
+
+void sensors433RadioReceive()
+{
+    if (!cc1101->hasMessage())
+    {
+        return;
+    }
+    Sensor sensor = cc1101->radioRawReceive();
+    displaySensor(sensor);
+}
+
+void displaySensor(Sensor sensor)
+{
+    if (strlen(sensor.id) != 16)
+    {
+        return;
+    }
+
+    String mergedString = sensor.id;
+    mergedString += " ";
+    mergedString += String(sensor.temp);
+
+    if (sensor.hygro >= 0)
+    {
+        mergedString += " ";
+        mergedString += String(sensor.hygro);
+    }
+    Serial.println(mergedString);
+
+    delay(100);
 }

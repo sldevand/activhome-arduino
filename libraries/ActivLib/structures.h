@@ -33,59 +33,58 @@
 #include <stdint.h>
 #include <Arduino.h>
 
-struct Message{
+struct Message
+{
   char buf[MESSAGE_LEN];
-
 };
 
-struct DayPlan{ 
+struct DayPlan
+{
   uint8_t jour;
   uint8_t modeId;
   uint8_t defaultModeId;
   char heure1Start[HOUR_LEN];
   char heure1Stop[HOUR_LEN];
   char heure2Start[HOUR_LEN];
-  char heure2Stop[HOUR_LEN]; 
+  char heure2Stop[HOUR_LEN];
 };
 
-struct WeekPlan{
+struct WeekPlan
+{
   uint8_t id;
   DayPlan dayPlans[WEEK_LEN];
 };
 
-struct Mode{
+struct Mode
+{
   uint8_t id;
   float consigne;
   float delta;
 };
 
-struct ComStruct{  
-  char meth[METH_LEN];
-  char key[KEY_LEN];
-  char buf[BUF_LEN]; 
+struct ComStruct
+{
+  char meth[METH_LEN] = "";
+  char key[KEY_LEN] = "";
+  char buf[BUF_LEN] = "";
 };
 
-struct Sensor{
-   char id[MAX_LEN];
-   float temp;
-   float hygro;
+struct Sensor
+{
+  char id[MAX_LEN]="";
+  float temp=0;
+  float hygro=0;
 };
 
-struct Thermostat{
-    float consigne;
-    float delta;
-    float tempExt;    
-    bool interne; 
-    bool etat;
-    uint8_t mode;
-    uint8_t plan;
+struct Thermostat
+{
+  float consigne;
+  float delta;
+  float tempExt;
+  bool interne;
+  bool etat;
+  uint8_t mode;
+  uint8_t plan;
 };
-
-struct Lampe{
-    char id[MAX_LEN];
-    int numSer;
-    int etat;
-};
-  
 
 #endif

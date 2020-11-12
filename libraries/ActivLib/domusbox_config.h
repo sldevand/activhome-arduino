@@ -2,7 +2,6 @@
 
 #include "RF24Sensors.h"
 #include "MyCC1101.h"
-#include "Bluetooth.h"
 #include "Utils.h"
 #include <printf.h>
 #include <MemoryFree.h>
