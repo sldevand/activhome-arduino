@@ -26,6 +26,7 @@
 #define KEY_PLAN "plan"
 #define KEY_INFO "info"
 #define KEY_RTC "rtc"
+#define KEY_PWR "pwr"
 
 //Aquarium
 #define PRT_AQUA "aqua"

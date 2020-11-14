@@ -10,7 +10,7 @@
 #define HOUR_LEN 6
 #define MAX_LEN 20
 
-#define MESSAGE_LEN 10
+#define MESSAGE_LEN 15
 
 #define MIN_CONS 9.0
 #define MAX_CONS 30.0

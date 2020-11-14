@@ -34,8 +34,7 @@
 #define DHTPIN 4
 #define DHTTYPE DHT22
 #define R_PIPE 1
-#define VERSION 1.21
-
+#define VERSION 1.22
 
 #define METH_GET "get"
 #define METH_SEL "sel"
@@ -46,7 +45,7 @@
 #define KEY_INFO "info"
 #define KEY_PLAN "plan"
 #define KEY_RTC "rtc"
-
+#define KEY_PWR "pwr"
 
 #define CHK_PL_TIME 30000
 
@@ -63,6 +62,7 @@ const int sortieChaudiere = 2;
 
 bool etatChaudiere; //Etat du relais de la chaudiere
 bool dernierEtatChaudiere;
+bool power = true;
 
 const float tempOffset = -0.1;
 bool delayedInfos = false;
@@ -103,6 +103,38 @@ void setup() {
   dht.begin();
   Serial.println("Setup OK");
   checkPlanTime();
+}
+
+void loop(void) {
+
+  t.update();
+  etatChaudiere = digitalRead(entreeChaudiere);
+  if ( etatChaudiere != dernierEtatChaudiere) {
+    envoiEtatChaudiere();
+  }
+
+  if ( thMan.getInterne() == 1) {
+    thMan.setTempActuelle(sensor.temp);
+  }
+  else thMan.setTempActuelle(thMan.getTempExt());
+
+  if (thMan.getTempActuelle() < (thMan.getConsigne() - thMan.getDelta() / 2)) {
+    allumerChaudiere();
+
+  } else {
+    if (thMan.getTempActuelle() > (thMan.getConsigne() + thMan.getDelta() / 2)) {
+      eteindreChaudiere();
+
+    }
+  }
+  dernierEtatChaudiere = etatChaudiere;
+
+  radioRead();
+
+  if (delayedInfos) {
+    t.after(300, sendAllCallback);
+    delayedInfos = false;
+  }
 }
 
 void checkPlanTime() {
@@ -158,38 +190,7 @@ int hoursToMinutes(char* str) {
   return tmToMinutes(tm);
 }
 
-void loop(void) {
 
-  t.update();
-  etatChaudiere = digitalRead(entreeChaudiere);
-  if ( etatChaudiere != dernierEtatChaudiere) {
-    envoiEtatChaudiere();
-  }
-
-  if ( thMan.getInterne() == 1) {
-    thMan.setTempActuelle(sensor.temp);
-  }
-  else thMan.setTempActuelle(thMan.getTempExt());
-
-  if (thMan.getTempActuelle() < (thMan.getConsigne() - thMan.getDelta() / 2)) {
-    allumerChaudiere();
-
-  } else {
-    if (thMan.getTempActuelle() > (thMan.getConsigne() + thMan.getDelta() / 2)) {
-      eteindreChaudiere();
-
-    }
-  }
-  dernierEtatChaudiere = etatChaudiere;
-
-  radioRead();
-
-  if (delayedInfos) {
-    t.after(300, sendAllCallback);
-    delayedInfos = false;
-  }
-
-}
 
 bool radioRead() {
   if (radio.available()) {
@@ -258,18 +259,18 @@ bool bindMode() {
   Mode mode;
   radio.read( &mode, sizeof(mode));
   modMan.addMode(mode);
- 
+
   return true;
 }
 
 bool bindSensor() {
 
   Sensor sensorRecu;
-  radio.read( &sensorRecu, sizeof(sensorRecu));
+  radio.read(&sensorRecu, sizeof(sensorRecu));
 
   radio.stopListening();
   radio.setPayloadSize(sizeof(sensorRecu));
-  radio.write( &sensorRecu, sizeof(sensorRecu) );
+  radio.write(&sensorRecu, sizeof(sensorRecu));
   radio.startListening();
 
   return true;
@@ -288,6 +289,12 @@ bool bindCommande() {
     if (strcmp(commande.key, KEY_INFO) == 0) {
       delayedInfos = true;
       flushCommande();
+      return true;
+    }
+
+    //PWR
+    if (strcmp(commande.key, KEY_PWR) == 0) {
+      sendPowerState();
       return true;
     }
 
@@ -352,6 +359,19 @@ bool bindCommande() {
       int id = atoi(commande.buf);
       if (id > 0) thMan.setPlan(id);
     }
+    //PWR
+    if (strcmp(commande.key, KEY_PWR) == 0) {
+      delayedInfos = false;
+      int id = atoi(commande.buf);
+      if (id >= 0 && id <= 1) {
+        power = !!id;
+        if(!power) {
+          eteindreChaudiere();
+        }
+        
+        sendPowerState();
+      }
+    }
   }
 
   //SAVE
@@ -377,12 +397,20 @@ bool bindCommande() {
   return false;
 }
 
+void sendPowerState() {
+  char * str;
+  if(power) str = "tht pow 1\0";
+  else str="tht pow 0\0";
+
+  sendMessage(str);
+}
+
 bool bindDayplan() {
   DayPlan dp;
   stopTimer();
   radio.read( &dp, sizeof(DayPlan));
   plMan.setDayPlan(dp);
-  
+
   startTimer();
   return true;
 }
@@ -496,7 +524,9 @@ void sendInfos(bool stopStart) {
 }
 
 void allumerChaudiere() {
-  digitalWrite(sortieChaudiere, LOW);
+  if (power) {
+    digitalWrite(sortieChaudiere, LOW);
+  }
 }
 
 void eteindreChaudiere() {

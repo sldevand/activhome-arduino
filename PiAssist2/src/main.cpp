@@ -103,6 +103,7 @@ void checkCommands(char *buf)
                 //nrf24/node/2Nodw/ther/set/
                 if (strcmp(utils->m_tabString[4], METH_SET) == 0)
                 {
+                    strcpy(command.meth, METH_SET);
                     //nrf24/node/2Nodw/ther/set/cons/19/
                     if (strcmp(utils->m_tabString[5], KEY_CONSIGN) == 0)
                     {
@@ -134,6 +135,14 @@ void checkCommands(char *buf)
                         sensors24->m_thermostat.plan = atoi(utils->m_tabString[6]);
                         sensors24->radioTransmit(sensors24->m_thermostat);
                     }
+
+                    //nrf24/node/2Nodw/ther/set/pwr/1/
+                    if (strcmp(utils->m_tabString[5], KEY_PWR) == 0)
+                    {
+                        strcpy(command.key, KEY_PWR);
+                        strcpy(command.buf, utils->m_tabString[6]);
+                        sensors24->radioTransmit(command);
+                    }
                 }
                 //nrf24/node/2Nodw/ther/get/
                 if (strcmp(utils->m_tabString[4], METH_GET) == 0)
@@ -151,6 +160,13 @@ void checkCommands(char *buf)
                     {
                         strcpy(command.key, KEY_MODE);
                         strcpy(command.buf, utils->m_tabString[6]);
+                        sensors24->radioTransmit(command);
+                    }
+
+                    //nrf24/node/2Nodw/ther/get/pwr/
+                    if (strcmp(utils->m_tabString[5], KEY_PWR) == 0)
+                    {
+                        strcpy(command.key, KEY_PWR);
                         sensors24->radioTransmit(command);
                     }
 
