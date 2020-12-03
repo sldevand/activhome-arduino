@@ -26,7 +26,7 @@ void setup()
     cc1101->initChacon(14549858);
     delay(LONG_DELAY);
     cc1101->initRF433Sensors();
-    cc1101->SetReceive();
+    cc1101->startListeningChacon();
     delay(LONG_DELAY);
     digitalWrite(CSNCC11_PIN, HIGH);
     Serial.println("OK!");
@@ -36,6 +36,7 @@ void setup()
 void loop()
 {
     sensors433RadioReceive();
+    cc1101->listenSignal();
     sensors24RadioReceive();
     t.update();
 }

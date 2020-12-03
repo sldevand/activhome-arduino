@@ -2,9 +2,6 @@
 
 ChaconDIO::ChaconDIO()
 {
-	//Serial.begin(9600);
-	//bit2[26]={};              // 26 bit Identifiant emetteur
-	//bit2Interruptor[4]={};
 }
 
 ChaconDIO::ChaconDIO(uint8_t p_pinTx, uint8_t p_pinRx, unsigned long p_sender)
@@ -30,9 +27,8 @@ void ChaconDIO::setParameters(uint8_t p_pinTx, uint8_t p_pinRx, unsigned long p_
 	coeffDelay = 1.0f;
 
 	increment = 0.01f;
-	coeffDelayRcv = 0.77f;
+	coeffDelayRcv = 1.0f;
 	tries = 0;
-	//coeffDelayRcv = 0.77f;
 }
 
 void ChaconDIO::go(int interruptor, byte onoff)
@@ -191,23 +187,6 @@ bool ChaconDIO::listenSignal()
 	receivedSignal.receptor = 0;
 	receivedSignal.isSignal = false;
 
-	// tries++;
-	// if(tries > 5) {
-	// 	tries=0;
-	//  	coeffDelayRcv += increment;
-
-	// }
-
-	// if (coeffDelayRcv > 0.87f)
-	// {
-	// 	increment = -0.01f;
-	// }
-
-	// if (coeffDelayRcv < 0.72f)
-	// {
-	// 	increment = 0.01f;
-	// }
-
 	int i = 0;
 	unsigned long t = 0;
 	unsigned long prevT = 0;
@@ -221,24 +200,23 @@ bool ChaconDIO::listenSignal()
 	t = pulseIn(pinRx, LOW, 12000);
 
 	//Latch1
-	if (t > coeffDelay * 4000 && t < coeffDelay * 11000)
+	if (t > coeffDelayRcv * 4000 && t < coeffDelayRcv * 11000)
 	{
-
 		t = pulseIn(pinRx, LOW, 4000);
 
 		//Latch2
-		if (t > coeffDelayRcv * 2000 && t < coeffDelayRcv * 3000)
+		if (t > coeffDelayRcv * 40 && t < coeffDelayRcv * 4000)
 		{
 			// data
 			while (i < 64)
 			{
-				t = pulseIn(pinRx, LOW, 6000);
+				t = pulseIn(pinRx, LOW, 2500);
 
-				if (t > coeffDelayRcv * 170 && t < coeffDelayRcv * 600)
+				if (t > coeffDelayRcv * 150 && t < coeffDelayRcv * 600)
 				{
 					bit = 0;
 				}
-				else if (t > coeffDelayRcv * 800 && t < coeffDelayRcv * 1200)
+				else if (t > coeffDelayRcv * 900 && t < coeffDelayRcv * 1800)
 				{
 					bit = 1;
 				}
@@ -257,7 +235,6 @@ bool ChaconDIO::listenSignal()
 				{
 					if ((prevBit ^ bit) == 0)
 					{ // must be either 01 or 10, cannot be 00 or 11
-
 						i = 0;
 						break;
 					}
@@ -329,7 +306,7 @@ bool ChaconDIO::checkSignal()
 
 unsigned long ChaconDIO::getPulse()
 {
-	return pulseIn(pinRx, LOW, 5000);
+	return pulseIn(pinRx, LOW, 100000);
 }
 
 #endif
