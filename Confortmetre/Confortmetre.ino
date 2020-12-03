@@ -56,6 +56,7 @@ void loop() {
 
   delay(SHORT_DELAY);
   cc1101->initChacon(14549858);
+  cc1101->setChannel(0x01);
   delay(LONG_DELAY);
   cc1101->RF433Transmit((uint8_t*) &sensor, sizeof(sensor));
   delay(1000);

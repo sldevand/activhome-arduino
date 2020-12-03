@@ -44,6 +44,7 @@ boolean MyCC1101::sendDataChacon(long sender, int interruptor, byte data)
 #ifdef LISTENER_MODE
 void MyCC1101::startListeningChacon()
 {
+  setChannel(0x01);
   byte marcState = readMARCState();
   SetIdle();    // Enter IDLE state
   SetReceive(); // Enter RX state
@@ -51,10 +52,6 @@ void MyCC1101::startListeningChacon()
   rfState = RFSTATE_RX;
 }
 
-void MyCC1101::readDataChacon()
-{
-  listenSignal();
-}
 #endif
 
 void MyCC1101::initRF433Sensors()
