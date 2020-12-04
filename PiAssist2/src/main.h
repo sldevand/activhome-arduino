@@ -2,7 +2,7 @@
    Project Name : PiAssist2
    By : Sébastien LORRAIN
    Date : 12/11/2020
-   Version : 2.2.2
+   Version : 2.2.3
    Description :
    A brancher en USB sur le Raspberry Pi de la box domotique DIY DomusBox
    Sert à gérer la RF pour le projet de box domotique DIY DomusBox
@@ -19,15 +19,18 @@
       librairies utilisées : nRF24L01.h RF24.h et RF24_config.h
       source : http://tmrh20.github.io/RF24
    ------------------------------------------------------------------------------------------------
-   - Gestion des prises RF433 Chacon IO
+   - Gestion des prises RF433 Chacon DIO
      librairies utilisées : adaptée du fichier radioEmission.cpp dans le zip 'hcc.zip' de idleman :
      source : http://idleman.fr/ressources/PHP/hcc/hcc.zip
      cc1101/chacon/14549858/2/1/
      cc1101/chacon/14549858/2/0/
    ------------------------------------------------------------------------------------------------
+    - Gestion du capteur de porte RF433 Chacon DIO
+    chacon-dio <sender> <receptor> <state>
+   ------------------------------------------------------------------------------------------------
 */
 
-#define VERSION "2.2.2"
+#define VERSION "2.2.3"
 
 #include "domusbox_config.h"
 #include "structures.h"

@@ -27,6 +27,8 @@ public:
 #ifdef LISTENER_MODE
 	bool listenSignal();
 	bool checkSignal();
+	void displaySignal();
+	bool compareReceivedSignals();
 	unsigned long getPulse();
 #endif
 
@@ -49,7 +51,10 @@ public:
 		int receptor;
 		boolean isSignal;
 		boolean state;
-	} receivedSignal;
+	};
+
+	signal_t receivedSignal;
+	signal_t previousReceivedSignal;
 #endif
 	//String m_onoff;
 };

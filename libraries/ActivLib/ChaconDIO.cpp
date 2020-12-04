@@ -29,6 +29,16 @@ void ChaconDIO::setParameters(uint8_t p_pinTx, uint8_t p_pinRx, unsigned long p_
 	increment = 0.01f;
 	coeffDelayRcv = 1.0f;
 	tries = 0;
+
+#ifdef LISTENER_MODE
+	receivedSignal.sender = 0;
+	receivedSignal.receptor = 0;
+	receivedSignal.isSignal = false;
+
+	previousReceivedSignal.sender = 0;
+	previousReceivedSignal.receptor = 0;
+	previousReceivedSignal.isSignal = false;
+#endif
 }
 
 void ChaconDIO::go(int interruptor, byte onoff)
@@ -290,12 +300,11 @@ bool ChaconDIO::checkSignal()
 	//Si un signal au protocol home easy est reçu...
 	if (receivedSignal.isSignal)
 	{
-		Serial.print("chacon-dio ");
-		Serial.print(receivedSignal.sender);
-		Serial.print(" ");
-		Serial.print(receivedSignal.receptor);
-		Serial.print(" ");
-		Serial.println(receivedSignal.state);
+		if (!compareReceivedSignals())
+		{
+			previousReceivedSignal = receivedSignal;
+			displaySignal();
+		}
 
 		return true;
 	}
@@ -303,6 +312,23 @@ bool ChaconDIO::checkSignal()
 	{
 		return false;
 	}
+}
+
+bool ChaconDIO::compareReceivedSignals()
+{
+	return previousReceivedSignal.sender == receivedSignal.sender &&
+		   previousReceivedSignal.receptor == receivedSignal.receptor &&
+		   previousReceivedSignal.state == receivedSignal.state;
+}
+
+void ChaconDIO::displaySignal()
+{
+	Serial.print("chacon-dio ");
+	Serial.print(receivedSignal.sender);
+	Serial.print(" ");
+	Serial.print(receivedSignal.receptor);
+	Serial.print(" ");
+	Serial.println(receivedSignal.state);
 }
 
 unsigned long ChaconDIO::getPulse()
