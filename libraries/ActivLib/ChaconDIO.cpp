@@ -290,6 +290,7 @@ bool ChaconDIO::checkSignal()
 	//Si un signal au protocol home easy est reçu...
 	if (receivedSignal.isSignal)
 	{
+		Serial.print("chacon-dio ");
 		Serial.print(receivedSignal.sender);
 		Serial.print(" ");
 		Serial.print(receivedSignal.receptor);
