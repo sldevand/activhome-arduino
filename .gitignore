@@ -1,4 +1,5 @@
 Doc
 Archives
 *.sublime-*
+PiAssist2/.env
 PiAssist2/platformio.ini

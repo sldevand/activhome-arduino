@@ -1,6 +1,6 @@
 #!/bin/bash
-
-scp .pio/build/nanoatmega328/firmware.hex pi@domusbox:/home/pi/tmp/arduino_build
-curl http://192.168.1.52/activapi/api/node/toggle/off
-ssh pi@domusbox '/home/pi/arduiload firmware.hex'
-curl http://192.168.1.52/activapi/api/node/toggle/on
+export $(grep -v '^#' .env | xargs)
+scp .pio/build/nanoatmega328/firmware.hex $REMOTE_USER@$REMOTE_HOST:$BUILD_DIR &&
+curl $BEFORE_SEND &&
+$REMOTE_USER@$REMOTE_HOST "$ARDUINO_UPLOAD firmware.hex" &&
+curl $AFTER_SEND
