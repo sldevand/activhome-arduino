@@ -8,7 +8,8 @@
 #define MODES_LEN 4
 #define HOUR_PLAN_LEN 6
 #define WEEK_LEN 7
-#define HOUR_LEN 6
+#define HOUR_PLAN_MINUTE_UNDEFINED 1999
+#define HOUR_PLAN_MODE_UNDEFINED 0
 #define MAX_LEN 20
 
 #define MESSAGE_LEN 15
@@ -42,7 +43,7 @@ struct Message
 struct HourPlan
 {
   uint8_t modeId;
-  char hour[HOUR_LEN];
+  int minute;
 };
 
 struct DayPlan

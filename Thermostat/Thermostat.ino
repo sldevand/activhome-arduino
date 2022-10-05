@@ -95,26 +95,20 @@ void loop(void)
 
   t.update();
   etatChaudiere = digitalRead(entreeChaudiere);
-  if (etatChaudiere != dernierEtatChaudiere)
-  {
+  if (etatChaudiere != dernierEtatChaudiere) {
     envoiEtatChaudiere();
   }
 
-  if (thMan.getInterne() == 1)
-  {
+  if (thMan.getInterne() == 1) {
     thMan.setTempActuelle(sensor.temp);
-  }
-  else
+  } else {
     thMan.setTempActuelle(thMan.getTempExt());
-
-  if (thMan.getTempActuelle() < (thMan.getConsigne() - thMan.getDelta() / 2))
-  {
-    allumerChaudiere();
   }
-  else
-  {
-    if (thMan.getTempActuelle() > (thMan.getConsigne() + thMan.getDelta() / 2))
-    {
+
+  if (thMan.getTempActuelle() < (thMan.getConsigne() - thMan.getDelta() / 2)) {
+    allumerChaudiere();
+  } else {
+    if (thMan.getTempActuelle() > (thMan.getConsigne() + thMan.getDelta() / 2)) {
       eteindreChaudiere();
     }
   }
@@ -122,8 +116,7 @@ void loop(void)
 
   radioRead();
 
-  if (delayedInfos)
-  {
+  if (delayedInfos) {
     t.after(300, sendAllCallback);
     delayedInfos = false;
   }
@@ -131,8 +124,7 @@ void loop(void)
 
 void checkPlanTime()
 {
-  if (thMan.getPlan() > 0)
-  {
+  if (thMan.getPlan() > 0) {
     readRTC();
     DayPlan dp;
 
@@ -146,9 +138,10 @@ void checkPlanTime()
     int rtcTime = tmToMinutes(clkMan.tm);
     uint8_t mode = 1;
     for (int hPlan = 0; hPlan < HOUR_PLAN_LEN; hPlan++) {
-      rtcTime >= hoursToMinutes(dp.hourPlans[hPlan].hour);
-      mode = dp.hourPlans[hPlan].modeId;
-      break;
+      if (rtcTime >= dp.hourPlans[hPlan].minute) {
+        mode = dp.hourPlans[hPlan].modeId;
+        break;
+      }
     }
 
     bindThermostatWithMode(mode);
@@ -172,39 +165,32 @@ int tmToMinutes(tmElements_t tm)
   return tm.Hour * 60 + tm.Minute;
 }
 
-int hoursToMinutes(char *str)
-{
-  tmElements_t tm = strToHours(str);
-  return tmToMinutes(tm);
-}
-
 bool radioRead()
 {
-  if (radio.available())
-  {
-    uint8_t payloadSize = radio.getDynamicPayloadSize();
-    radio.setPayloadSize(payloadSize);
-    flushCommande();
-    switch (payloadSize)
-    {
-    case sizeof(Thermostat):
-      return bindThermostat();
-    case sizeof(Sensor):
-      return bindSensor();
-    case sizeof(ComStruct):
-      return bindCommande();
-    case sizeof(Mode):
-      return bindMode();
-    case sizeof(DayPlan):
-      return bindDayplan();
-    case sizeof(tmElements_t):
-      return bindRTC();
-    default:
-      radio.flush_rx();
-      flushCommande();
-      return false;
-    }
+  if (!radio.available()) {
+    return false;
   }
+  uint8_t payloadSize = radio.getDynamicPayloadSize();
+  radio.setPayloadSize(payloadSize);
+  flushCommande();
+  switch (payloadSize) {
+  case sizeof(Thermostat):
+    return bindThermostat();
+  case sizeof(Sensor):
+    return bindSensor();
+  case sizeof(ComStruct):
+    return bindCommande();
+  case sizeof(Mode):
+    return bindMode();
+  case sizeof(DayPlan):
+    return bindDayplan();
+  case sizeof(tmElements_t):
+    return bindRTC();
+  default:
+    radio.flush_rx();
+    flushCommande();
+    return false;
+  }  
 }
 
 bool bindThermostat()
@@ -226,10 +212,11 @@ void bindThermostatWithMode(uint8_t id)
   }
   Mode mode;
   mode = modMan.getMode(id);
-
+ if (mode.id <= 0) {
+    return;
+  }
   bool changeMode = false;
-  if (mode.id != thMan.getMode())
-  {
+  if (mode.id != thMan.getMode()) {
     #ifdef VERBOSE_MODE
     Serial.print("chg Mod from = ");
     Serial.print(thMan.getMode());
@@ -238,20 +225,19 @@ void bindThermostatWithMode(uint8_t id)
     #endif
     changeMode = true;
   }
-
-  if (mode.id > 0)
-  {
-    delayedInfos = thMan.hasChanged(mode);
-    if (delayedInfos)
-    #ifdef VERBOSE_MODE
-      Serial.print("thermo has changed");
-    #endif  
-    thMan.setConsigne(mode.consigne);
-    thMan.setDelta(mode.delta);
-    if (changeMode)
-      thMan.setMode(mode.id);
-    thMan.display();
+ 
+  delayedInfos = thMan.hasChanged(mode);
+  if (delayedInfos) {
+  #ifdef VERBOSE_MODE
+    Serial.print("thermo has changed");
+  #endif
   }
+  thMan.setConsigne(mode.consigne);
+  thMan.setDelta(mode.delta);
+  if (changeMode) {
+    thMan.setMode(mode.id);
+  }
+  thMan.display();  
 }
 
 bool bindMode()
@@ -265,7 +251,6 @@ bool bindMode()
 
 bool bindSensor()
 {
-
   Sensor sensorRecu;
   radio.read(&sensorRecu, sizeof(sensorRecu));
 
@@ -279,72 +264,56 @@ bool bindSensor()
 
 bool bindCommande()
 {
-
   radio.read(&commande, sizeof(commande));
 
   int id;
   delay(2);
   // GET
-  if (strcmp(commande.meth, METH_GET) == 0)
-  {
+  if (strcmp(commande.meth, METH_GET) == 0) {
 
     // INFO
-    if (strcmp(commande.key, KEY_INFO) == 0)
-    {
+    if (strcmp(commande.key, KEY_INFO) == 0) {
       delayedInfos = true;
       flushCommande();
       return true;
     }
 
     // PWR
-    if (strcmp(commande.key, KEY_PWR) == 0)
-    {
+    if (strcmp(commande.key, KEY_PWR) == 0) {
       sendPowerState();
       return true;
     }
 
     // MODE
-    if (strcmp(commande.key, KEY_MODE) == 0)
-    {
+    if (strcmp(commande.key, KEY_MODE) == 0) {
       delayedInfos = false;
       id = atoi(commande.buf);
-      if (id < 254)
-      {
+      if (id < 254) {
         Mode mode = modMan.getMode(id);
-        if (mode.id > 0)
-        {
+        if (mode.id > 0) {
           sendMode(mode);
         }
-      }
-      else
-      {
-        for (byte i = 0; i < MODES_LEN; i++)
-        {
+      } else {
+        for (byte i = 0; i < MODES_LEN; i++) {
           sendMode(modMan.modes[i]);
         }
       }
     }
 
     // PLAN
-    if (strcmp(commande.key, KEY_PLAN) == 0)
-    {
+    if (strcmp(commande.key, KEY_PLAN) == 0) {
       delayedInfos = false;
 
       id = atoi(commande.buf);
 
       stopTimer();
-      if (id < 254)
-      {
+      if (id < 254) {
         DayPlan dp = plMan.getDayPlan(id);
-        if (dp.jour > 0)
-        {
+        if (dp.jour > 0) {
           sendDayplan(dp);
         }
-      }
-      else
-      {
-        for (byte i = 0; i < WEEK_LEN; i++)
-        {
+      } else {
+        for (byte i = 0; i < WEEK_LEN; i++) {
           sendDayplan(plMan.weekPlan.dayPlans[i]);
           delay(100);
         }
@@ -352,17 +321,14 @@ bool bindCommande()
       startTimer();
     }
     // RTC
-    if (strcmp(commande.key, KEY_RTC) == 0)
-    {
+    if (strcmp(commande.key, KEY_RTC) == 0) {
       sendRTC(clkMan.read());
     }
   }
   // SEL
-  if (strcmp(commande.meth, METH_SEL) == 0)
-  {
+  if (strcmp(commande.meth, METH_SEL) == 0) {
     // MODE
-    if (strcmp(commande.key, KEY_MODE) == 0)
-    {
+    if (strcmp(commande.key, KEY_MODE) == 0) {
       delayedInfos = true;
       int id = atoi(commande.buf);
       if (id > 0 && thMan.getPlan() <= 0)
@@ -373,40 +339,32 @@ bool bindCommande()
   }
 
   // SET
-  if (strcmp(commande.meth, METH_SET) == 0)
-  {
+  if (strcmp(commande.meth, METH_SET) == 0) {
     // PLAN
-    if (strcmp(commande.key, KEY_PLAN) == 0)
-    {
+    if (strcmp(commande.key, KEY_PLAN) == 0) {
       delayedInfos = false;
       int id = atoi(commande.buf);
       if (id > 0)
         thMan.setPlan(id);
     }
     // PWR
-    if (strcmp(commande.key, KEY_PWR) == 0)
-    {
+    if (strcmp(commande.key, KEY_PWR) == 0) {
       delayedInfos = false;
       int id = atoi(commande.buf);
-      if (id >= 0 && id <= 1)
-      {
+      if (id >= 0 && id <= 1) {
         power = !!id;
-        if (!power)
-        {
+        if (!power) {
           eteindreChaudiere();
         }
-
         sendPowerState();
       }
     }
   }
 
   // SAVE
-  if (strcmp(commande.meth, METH_SAVE) == 0)
-  {
+  if (strcmp(commande.meth, METH_SAVE) == 0) {
     // PLAN
-    if (strcmp(commande.key, KEY_PLAN) == 0)
-    {
+    if (strcmp(commande.key, KEY_PLAN) == 0) {
       delayedInfos = true;
       plMan.savePlanningInEEPROM();
       plMan.displayPlanning();
@@ -414,8 +372,7 @@ bool bindCommande()
     }
 
     // MODE
-    if (strcmp(commande.key, KEY_MODE) == 0)
-    {
+    if (strcmp(commande.key, KEY_MODE) == 0) {
       delayedInfos = true;
       modMan.saveModesInEEPROM();
       modMan.displayModes();
@@ -470,7 +427,6 @@ void sendMode(Mode mode)
 
 void sendDayplan(DayPlan dayPlan)
 {
-
   radio.stopListening();
   radio.setPayloadSize(sizeof(DayPlan));
   radio.write(&dayPlan, sizeof(DayPlan));
@@ -500,14 +456,12 @@ void sendMessage(char *str)
 
 void capteurToString()
 {
-#ifdef VERBOSE_MODE
   Serial.print(F("ID: "));
   Serial.print(sensor.id);
   Serial.print(F(" Tmp: "));
   Serial.print(sensor.temp);
   Serial.print(F(" Hyg: "));
   Serial.println(sensor.hygro);
-#endif
 }
 
 void initRadio()
@@ -573,8 +527,7 @@ void sendInfos(bool stopStart)
 
 void allumerChaudiere()
 {
-  if (power)
-  {
+  if (power) {
     digitalWrite(sortieChaudiere, LOW);
   }
 }
@@ -604,20 +557,16 @@ void stopTimer()
 void measureAndSend()
 {
   measure();
-  if (currentTime >= sendingTime)
-  {
+  if (currentTime >= sendingTime) {
     radioSend();
     currentTime = 1;
-  }
-  else
-  {
+  } else {
     currentTime++;
   }
 }
 
 void measure()
 {
-
   if (etatChaudiere)
     thMan.setEtat(0.0);
   else
@@ -630,8 +579,7 @@ void measure()
   float t = dht.readTemperature();
 
   // Check if any reads failed and exit early (to try again).
-  if (isnan(t) || isnan(h))
-  {
+  if (isnan(t) || isnan(h)) {
     Serial.println(F("DHT read fail"));
     radio.startListening();
     startTimer();
@@ -655,15 +603,13 @@ void measure()
 
 void flushCommande()
 {
-  for (byte i = 0; i < BUF_LEN; i++)
-  {
+  for (byte i = 0; i < BUF_LEN; i++) {
     commande.buf[i] = 0x00;
   }
 }
 
 tmElements_t readRTC()
 {
-
   tmElements_t tm = clkMan.read();
   clkMan.display();
   return tm;

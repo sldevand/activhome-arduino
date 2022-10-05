@@ -50,13 +50,14 @@ void PlanningsManager::displayPlanning()
 		Serial.print("J:");
 		Serial.print(dp.jour);
 		Serial.print(" | ");
-		for (int k = 0; k < HOUR_PLAN_LEN; k++) {
+		for (int k = 0; k < HOUR_PLAN_LEN; k++)
+		{
 			Serial.print("H:");
-			Serial.print(dp.hourPlans[k].hour);
+			Serial.print(dp.hourPlans[k].minute);
 			Serial.print(" m:");
 			Serial.print(dp.hourPlans[k].modeId);
 			Serial.print(" | ");
-		}	
+		}
 		Serial.println("");
 	}
 }
@@ -66,18 +67,18 @@ DayPlan PlanningsManager::getDefaultDayPlan()
 	DayPlan dp;
 	dp.jour = 1;
 
-	strcpy(dp.hourPlans[0].hour, "05:00");
-	dp.hourPlans[0].modeId=1;
-	strcpy(dp.hourPlans[1].hour, "08:00");
-	dp.hourPlans[1].modeId=2;
-	strcpy(dp.hourPlans[2].hour, "17:00");
-	dp.hourPlans[2].modeId=1;
-	strcpy(dp.hourPlans[3].hour, "23:00");
-	dp.hourPlans[3].modeId=2;
-	strcpy(dp.hourPlans[4].hour, "XX:XX");
-	dp.hourPlans[4].modeId=3;
-	strcpy(dp.hourPlans[5].hour, "XX:XX");
-	dp.hourPlans[5].modeId=3;
+	dp.hourPlans[0].minute = 300;
+	dp.hourPlans[0].modeId = 1;
+	dp.hourPlans[1].minute = 480;
+	dp.hourPlans[1].modeId = 2;
+	dp.hourPlans[2].minute = 1020;
+	dp.hourPlans[2].modeId = 1;
+	dp.hourPlans[3].minute = 1380;
+	dp.hourPlans[3].modeId = 2;
+	for (int i = 4; i < HOUR_PLAN_LEN; i++) {
+		dp.hourPlans[i].minute = HOUR_PLAN_MINUTE_UNDEFINED;
+		dp.hourPlans[i].modeId = HOUR_PLAN_MODE_UNDEFINED;
+	}
 
 	return dp;
 }
@@ -88,10 +89,8 @@ WeekPlan PlanningsManager::getDefaultWeekPlan()
 
 	WeekPlan weekPlan;
 	weekPlan.id = 1;
-	for (int day = 1; day <= WEEK_LEN; day++)
-	{
-		if (day > 0 && day <= WEEK_LEN)
-		{
+	for (int day = 1; day <= WEEK_LEN; day++) {
+		if (day > 0 && day <= WEEK_LEN) {
 			dp.jour = day;
 			weekPlan.dayPlans[day - 1] = dp;
 		}
@@ -106,10 +105,8 @@ DayPlan PlanningsManager::getDayPlan(uint8_t jour)
 
 	if (jour == 0)
 		jour = 7;
-	for (int day = 0; day < WEEK_LEN; day++)
-	{
-		if (this->weekPlan.dayPlans[day].jour == jour)
-		{
+	for (int day = 0; day < WEEK_LEN; day++) {
+		if (this->weekPlan.dayPlans[day].jour == jour) {
 			return this->weekPlan.dayPlans[day];
 		}
 	}
@@ -119,10 +116,8 @@ DayPlan PlanningsManager::getDayPlan(uint8_t jour)
 
 void PlanningsManager::setDayPlan(DayPlan dp)
 {
-	for (int day = 0; day < WEEK_LEN; day++)
-	{
-		if (this->weekPlan.dayPlans[day].jour == dp.jour)
-		{
+	for (int day = 0; day < WEEK_LEN; day++) {
+		if (this->weekPlan.dayPlans[day].jour == dp.jour) {
 			this->weekPlan.dayPlans[day] = dp;
 			Serial.println("* dp set * ");
 		}
