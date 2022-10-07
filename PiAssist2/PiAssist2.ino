@@ -1,3 +1,7 @@
+
+#include "domusbox_config.h"
+#include "structures.h"
+#include "Timer.h"
 #include "main.h"
 
 void setup()
@@ -262,12 +266,7 @@ void RTCTherPut()
 void dayPlanPut()
 {
     sensors24->m_dayplan.jour = atoi(utils->m_tabString[6]);
-    sensors24->m_dayplan.modeId = atoi(utils->m_tabString[7]);
-    sensors24->m_dayplan.defaultModeId = atoi(utils->m_tabString[8]);
-    strcpy(sensors24->m_dayplan.heure1Start, utils->m_tabString[9]);
-    strcpy(sensors24->m_dayplan.heure1Stop, utils->m_tabString[10]);
-    strcpy(sensors24->m_dayplan.heure2Start, utils->m_tabString[11]);
-    strcpy(sensors24->m_dayplan.heure2Stop, utils->m_tabString[12]);
+
 
     sensors24->radioTransmit(sensors24->m_dayplan);
 }
@@ -344,18 +343,6 @@ void bindDayplan()
 
     String mergedString = "therplan ";
     mergedString += String(sensors24->m_dayplan.jour);
-    mergedString += " ";
-    mergedString += String(sensors24->m_dayplan.modeId);
-    mergedString += " ";
-    mergedString += String(sensors24->m_dayplan.defaultModeId);
-    mergedString += " ";
-    mergedString += String(sensors24->m_dayplan.heure1Start);
-    mergedString += " ";
-    mergedString += String(sensors24->m_dayplan.heure1Stop);
-    mergedString += " ";
-    mergedString += String(sensors24->m_dayplan.heure2Start);
-    mergedString += " ";
-    mergedString += String(sensors24->m_dayplan.heure2Stop);
 
     Serial.println(mergedString);
 
