@@ -79,9 +79,21 @@ Recupérer RTC
 ```
 nrf24/node/2Nodw/ther/get/rtc/
 ```
-
 **SEL**
-Sélectionner mode 
+Sélectionner mode (de 1 à 4)
 ```
-nrf24/node/2Nodw/ther/get/info/
+nrf24/node/2Nodw/ther/sel/mode/1/
+```
+**PUT**
+Modifier un mode (de 1 à 4)
+```
+nrf24/node/2Nodw/ther/put/mode/4/23.5/0.7/
+```
+Modifier heure de la RTC
+```
+nrf24/node/2Nodw/ther/put/rtc/6/2018/02/15/15/34/22/
+```
+Modifier un jour de planning
+```
+nrf24/node/2Nodw/ther/put/plan/2/1/3/06:00/23:00/XX:XX/XX:XX/
 ```
