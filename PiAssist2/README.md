@@ -23,5 +23,65 @@ Sert à gérer la RF pour le projet de box domotique DIY DomusBox
     cc1101/chacon/14549858/2/1/ </br>
     cc1101/chacon/14549858/2/0/ </br>
 
-- Gestion du capteur de porte RF433 Chacon DIO
+- Gestion du capteur de porte RF433 Chacon DIO  </br>
 chacon-dio \<sender> \<receptor> \<state> </br>
+
+## Commandes
+### Prises Chacon Dio
+Pattern
+```
+cc1101/chacon/IDGROUPE/IDPRISE/1/
+```
+Exemple : allumer prise 2 du groupe 14549858
+```
+cc1101/chacon/14549858/2/1/ 
+```
+### Thermostat
+**SET**
+
+Changer consigne
+```
+nrf24/node/2Nodw/ther/set/cons/19/
+```
+Changer delta
+```
+nrf24/node/2Nodw/ther/set/delta/0.7/
+```
+Changer id Planning
+```
+nrf24/node/2Nodw/ther/set/plan/1/
+```
+Activer ou desactiver chaudière 
+```
+nrf24/node/2Nodw/ther/set/pwr/1/
+nrf24/node/2Nodw/ther/set/pwr/0/
+```
+
+**GET**
+
+Recupérer infos 
+```
+nrf24/node/2Nodw/ther/get/info/
+```
+Recupérer mode
+```
+nrf24/node/2Nodw/ther/get/mode/1/
+```
+Recupérer etat power
+```
+nrf24/node/2Nodw/ther/get/pwr/
+```
+Recupérer planning day
+```
+nrf24/node/2Nodw/ther/get/plan/1/
+```
+Recupérer RTC
+```
+nrf24/node/2Nodw/ther/get/rtc/
+```
+
+**SEL**
+Sélectionner mode 
+```
+nrf24/node/2Nodw/ther/get/info/
+```

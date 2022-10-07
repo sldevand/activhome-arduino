@@ -121,18 +121,6 @@ void checkCommands(char *buf)
                         sensors24->m_thermostat.delta = atof(utils->m_tabString[6]);
                         sensors24->radioTransmit(sensors24->m_thermostat);
                     }
-                    //nrf24/node/2Nodw/ther/set/temp/19.5/
-                    if (strcmp(utils->m_tabString[5], KEY_TEMP) == 0)
-                    {
-                        sensors24->m_thermostat.tempExt = atof(utils->m_tabString[6]);
-                        sensors24->radioTransmit(sensors24->m_thermostat);
-                    }
-                    //nrf24/node/2Nodw/ther/set/int/1/
-                    if (strcmp(utils->m_tabString[5], KEY_INTERNE) == 0)
-                    {
-                        sensors24->m_thermostat.interne = atoi(utils->m_tabString[6]);
-                        sensors24->radioTransmit(sensors24->m_thermostat);
-                    }
 
                     //nrf24/node/2Nodw/ther/set/plan/1/
                     if (strcmp(utils->m_tabString[5], KEY_PLAN) == 0)
