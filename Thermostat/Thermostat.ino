@@ -1,3 +1,4 @@
+#include thermostat_defines.h
 #include "structures.h"
 #include "nRF24L01.h"
 #include "RF24.h"
@@ -19,9 +20,6 @@
 #define DHTTYPE DHT22
 #define R_PIPE 1
 #define VERSION 1.3
-
-#define READ_PIPE "2Nodw";
-#define WRITE_PIPE "2Mast";
 
 #define METH_GET "get"
 #define METH_SEL "sel"
