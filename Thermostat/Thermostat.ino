@@ -1,9 +1,3 @@
-//#define FACTORY_RESET
-#define VERBOSE_MODE
-#define EEPROM_SAVING
-//#define RTC_DISPLAY
-//#define RTC_REFRESH 1000
-
 #include "structures.h"
 #include "nRF24L01.h"
 #include "RF24.h"
@@ -12,7 +6,7 @@
 #include "PlanningsManager.h"
 #include "ThermostatManager.h"
 #include "RTCManager.h"
-#include "Utils.h" ~
+#include "Utils.h"
 #include <Wire.h>
 #include <TimeLib.h>
 #include <DS1307RTC.h>
@@ -25,6 +19,9 @@
 #define DHTTYPE DHT22
 #define R_PIPE 1
 #define VERSION 1.3
+
+#define READ_PIPE "2Nodw";
+#define WRITE_PIPE "2Mast";
 
 #define METH_GET "get"
 #define METH_SEL "sel"
@@ -495,8 +492,8 @@ void capteurToString()
 
 void initRadio()
 {
-  byte addressWrite[6] = "2Mast";
-  byte addressRead[6] = "2Nodw";
+  byte addressWrite[6] = WRITE_PIPE;
+  byte addressRead[6] = READ_PIPE;
 
   radio.begin();            // Start up the radio
   radio.setAutoAck(1);      // Ensure autoACK is enabled

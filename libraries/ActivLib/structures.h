@@ -26,6 +26,13 @@
 #define THERMOSTAT_TYPE 1
 #define PROG_TYPE 2
 
+//#define FACTORY_RESET
+#define VERBOSE_MODE
+#define EEPROM_SAVING
+
+//#define RTC_DISPLAY
+//#define RTC_REFRESH 1000
+
 #include <stdint.h>
 #include <Arduino.h>
 
