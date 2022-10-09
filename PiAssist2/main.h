@@ -1,7 +1,7 @@
 #define VERSION "2.2.3"
 
 
-#define MAX_BUF_LEN 64
+#define MAX_BUF_LEN 96
 
 /****OBJECTS*****/
 RF24Sensors *sensors24;

@@ -76,8 +76,8 @@ DayPlan PlanningsManager::getDefaultDayPlan()
 	dp.hourPlans[3].minute = 1380;
 	dp.hourPlans[3].modeId = 2;
 	for (int i = 4; i < HOUR_PLAN_LEN; i++) {
-		dp.hourPlans[i].minute = HOUR_PLAN_MINUTE_UNDEFINED;
-		dp.hourPlans[i].modeId = HOUR_PLAN_MODE_UNDEFINED;
+		dp.hourPlans[i].minute = 1999;
+		dp.hourPlans[i].modeId = 0;
 	}
 
 	return dp;
@@ -114,12 +114,18 @@ DayPlan PlanningsManager::getDayPlan(uint8_t jour)
 	return dp;
 }
 
-void PlanningsManager::setDayPlan(DayPlan dp)
+bool PlanningsManager::setDayPlan(DayPlan dp)
 {
 	for (int day = 0; day < WEEK_LEN; day++) {
 		if (this->weekPlan.dayPlans[day].jour == dp.jour) {
+			for (int i = 0; i < HOUR_PLAN_LEN; i++) {
+				this->weekPlan.dayPlans[day].hourPlans[i].minute = 1999;
+				this->weekPlan.dayPlans[day].hourPlans[i].modeId = 0;
+			}
 			this->weekPlan.dayPlans[day] = dp;
-			Serial.println("* dp set * ");
+			return true;
 		}
 	}
+
+	return false;
 }

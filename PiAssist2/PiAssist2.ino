@@ -254,8 +254,22 @@ void RTCTherPut()
 void dayPlanPut()
 {
     sensors24->m_dayplan.jour = atoi(utils->m_tabString[6]);
-
-
+    for (byte i = 0; i < HOUR_PLAN_LEN; i++) {
+        byte j = i + 7;
+        if (j >= MAX_TOKEN_SIZE) {
+            break;
+        }
+        int minuteMode = atoi(utils->m_tabString[j]);
+        if (minuteMode == 0) {
+            sensors24->m_dayplan.hourPlans[i].minute = 1999;
+            sensors24->m_dayplan.hourPlans[i].modeId = 0;
+            continue;
+        }
+        int minute = (int)(minuteMode / 10);
+        uint8_t modeId = (uint8_t)(minuteMode % 10);
+        sensors24->m_dayplan.hourPlans[i].minute = minute;
+        sensors24->m_dayplan.hourPlans[i].modeId = modeId;
+    }
     sensors24->radioTransmit(sensors24->m_dayplan);
 }
 
@@ -339,7 +353,6 @@ void bindDayplan()
             mergedString += " ";
         }
     }
-
 
     Serial.println(mergedString);
 

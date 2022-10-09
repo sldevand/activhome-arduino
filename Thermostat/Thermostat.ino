@@ -69,15 +69,15 @@ void setup()
   strcpy(sensor.id, "sensor24thermid1\0");
 
   Serial.begin(115000);
-  Serial.print("- Thermo ver. ");
+  Serial.print(F("- Thermo ver. "));
   Serial.print(VERSION);
-  Serial.println(" -");
+  Serial.println(F(" -"));
   pinMode(entreeChaudiere, INPUT);
   pinMode(sortieChaudiere, OUTPUT);
   digitalWrite(sortieChaudiere, HIGH);
   etatChaudiere = false;
   dernierEtatChaudiere = false;
-  sensor.temp = -273.0;
+  sensor.temp = 273.0;
   flushCommande();
   modMan.initModes();
   plMan.initPlanning();
@@ -402,10 +402,13 @@ void sendPowerState()
 
 bool bindDayplan()
 {
-  DayPlan dp;
-  stopTimer();
-  radio.read(&dp, sizeof(DayPlan));
-  plMan.setDayPlan(dp);
+  stopTimer();  
+  DayPlan receivedDayPlan;
+  radio.read(&receivedDayPlan, sizeof(DayPlan));
+  if(plMan.setDayPlan(receivedDayPlan)) {
+    Serial.println("* dp set * ");
+    sendDayplan(receivedDayPlan);
+  }
 
   startTimer();
   return true;
@@ -505,6 +508,7 @@ void initRadio()
   radio.enableDynamicPayloads();
   radio.enableAckPayload();
   radio.startListening();
+  radio.flush_rx();
 }
 
 void radioSend()

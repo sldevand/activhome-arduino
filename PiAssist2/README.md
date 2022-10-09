@@ -95,5 +95,6 @@ nrf24/node/2Nodw/ther/put/rtc/6/2018/02/15/15/34/22/
 ```
 Modifier un jour de planning
 ```
-nrf24/node/2Nodw/ther/put/plan/2/1/3/06:00/23:00/XX:XX/XX:XX/
+nrf24/node/2Nodw/ther/put/plan/2/3001/4802/6004/10201/13802/14404/
 ```
+ici '3001' représente minute '300' et mode '1', 13802 représente minute '1380' et mode '2'
