@@ -23,12 +23,6 @@
 #define EEP_THR_IDX 64
 #define EEP_PLA_IDX 128
 
-//#define VERBOSE_MODE
-//#define FACTORY_RESET
-#define EEPROM_SAVING
-//#define RTC_DISPLAY
-//#define RTC_REFRESH 1000
-
 #define THERMOSTAT_TYPE 1
 #define PROG_TYPE 2
 

@@ -1,3 +1,9 @@
+//#define FACTORY_RESET
+#define VERBOSE_MODE
+#define EEPROM_SAVING
+//#define RTC_DISPLAY
+//#define RTC_REFRESH 1000
+
 #include "structures.h"
 #include "nRF24L01.h"
 #include "RF24.h"
@@ -309,6 +315,10 @@ bool bindCommande()
       stopTimer();
       if (id < 254) {
         DayPlan dp = plMan.getDayPlan(id);
+#ifdef VERBOSE_MODE
+        Serial.print("before sendDayplan : ");
+        Serial.println(dp.jour);
+#endif
         if (dp.jour > 0) {
           sendDayplan(dp);
         }
@@ -430,7 +440,26 @@ void sendDayplan(DayPlan dayPlan)
   radio.stopListening();
   radio.setPayloadSize(sizeof(DayPlan));
   radio.write(&dayPlan, sizeof(DayPlan));
+  displayDayplan(dayPlan);
   radio.startListening();
+}
+
+void displayDayplan(DayPlan dayPlan)
+{
+#ifdef VERBOSE_MODE
+  Serial.print("sendDayplan : ");
+  Serial.println(sizeof(DayPlan));
+  Serial.print("dayPlan : ");
+  Serial.print(dayPlan.jour);
+  Serial.print(" -> ");
+  for(int i=0; i< HOUR_PLAN_LEN ; i++) {
+    Serial.print(dayPlan.hourPlans[i].minute);
+    Serial.print("-");
+    Serial.print(dayPlan.hourPlans[i].modeId);
+    Serial.print(" | ");
+  }
+  Serial.println();
+#endif
 }
 
 void sendRTC(tmElements_t tm)
