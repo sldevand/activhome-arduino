@@ -1,4 +1,4 @@
-#include thermostat_defines.h
+#include "thermostat_defines.h"
 #include "structures.h"
 #include "nRF24L01.h"
 #include "RF24.h"
