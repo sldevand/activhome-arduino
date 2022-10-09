@@ -328,9 +328,18 @@ void bindMode()
 
 void bindDayplan()
 {
-
     String mergedString = "therplan ";
     mergedString += String(sensors24->m_dayplan.jour);
+    mergedString += " ";
+    for (byte k = 0; k < HOUR_PLAN_LEN; k++) {
+        mergedString += String(sensors24->m_dayplan.hourPlans[k].minute);
+        mergedString += "-";
+        mergedString += String(sensors24->m_dayplan.hourPlans[k].modeId);
+        if(k < HOUR_PLAN_LEN-1) {
+            mergedString += " ";
+        }
+    }
+
 
     Serial.println(mergedString);
 

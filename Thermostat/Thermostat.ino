@@ -435,6 +435,7 @@ void sendMode(Mode mode)
 void sendDayplan(DayPlan dayPlan)
 {
   radio.stopListening();
+  delay(50);
   radio.setPayloadSize(sizeof(DayPlan));
   radio.write(&dayPlan, sizeof(DayPlan));
   displayDayplan(dayPlan);
