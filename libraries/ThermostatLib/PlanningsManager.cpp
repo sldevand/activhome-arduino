@@ -114,6 +114,22 @@ DayPlan PlanningsManager::getDayPlan(uint8_t jour)
 	return dp;
 }
 
+DayPlan PlanningsManager::sortDayPlan(DayPlan dp)
+{
+	HourPlan temp;    
+    for (byte i = 0; i < HOUR_PLAN_LEN; i++) {     
+        for (byte j = i+1; j < HOUR_PLAN_LEN; j++) {
+           if(dp.hourPlans[i].minute > dp.hourPlans[j].minute) {    
+			   temp = dp.hourPlans[i];    
+               dp.hourPlans[i] = dp.hourPlans[j];    
+               dp.hourPlans[j] = temp;
+           }     
+        }     
+    }    
+
+	return dp;
+}
+
 bool PlanningsManager::setDayPlan(DayPlan dp)
 {
 	for (int day = 0; day < WEEK_LEN; day++) {
@@ -122,6 +138,7 @@ bool PlanningsManager::setDayPlan(DayPlan dp)
 				this->weekPlan.dayPlans[day].hourPlans[i].minute = 1999;
 				this->weekPlan.dayPlans[day].hourPlans[i].modeId = 0;
 			}
+			dp=this->sortDayPlan(dp);
 			this->weekPlan.dayPlans[day] = dp;
 			return true;
 		}

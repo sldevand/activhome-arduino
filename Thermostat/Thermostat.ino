@@ -407,7 +407,7 @@ bool bindDayplan()
   radio.read(&receivedDayPlan, sizeof(DayPlan));
   if(plMan.setDayPlan(receivedDayPlan)) {
     Serial.println("* dp set * ");
-    sendDayplan(receivedDayPlan);
+    sendDayplan(plMan.getDayPlan(receivedDayPlan.jour));
   }
 
   startTimer();

@@ -20,6 +20,7 @@
     WeekPlan getDefaultWeekPlan();    
 
     DayPlan getDayPlan(uint8_t jour);
+    DayPlan sortDayPlan(DayPlan dp);
     bool setDayPlan(DayPlan dp);  
 
     /*****MEMBERS****/
