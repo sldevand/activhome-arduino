@@ -138,7 +138,7 @@ void checkPlanTime()
 
     int rtcTime = tmToMinutes(clkMan.tm);
     uint8_t mode = 1;
-    for (int hPlan = 0; hPlan < HOUR_PLAN_LEN; hPlan++) {
+    for (int hPlan = HOUR_PLAN_LEN - 1; hPlan >= 0; hPlan--) {
       if (rtcTime >= dp.hourPlans[hPlan].minute) {
         mode = dp.hourPlans[hPlan].modeId;
         break;
@@ -436,7 +436,7 @@ void sendMode(Mode mode)
 void sendDayplan(DayPlan dayPlan)
 {
   radio.stopListening();
-  delay(50);
+  delay(100);
   radio.setPayloadSize(sizeof(DayPlan));
   radio.write(&dayPlan, sizeof(DayPlan));
   displayDayplan(dayPlan);
