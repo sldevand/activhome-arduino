@@ -6,8 +6,8 @@
 #define METH_LEN 5
 
 #define MODES_LEN 4
+#define HOUR_PLAN_LEN 6
 #define WEEK_LEN 7
-#define HOUR_LEN 6
 #define MAX_LEN 20
 
 #define MESSAGE_LEN 15
@@ -21,14 +21,15 @@
 #define EEP_THR_IDX 64
 #define EEP_PLA_IDX 128
 
-#define VERBOSE_MODE
-//#define FACTORY_RESET
-#define EEPROM_SAVING
-//#define RTC_DISPLAY
-//#define RTC_REFRESH 1000
-
 #define THERMOSTAT_TYPE 1
 #define PROG_TYPE 2
+
+//#define FACTORY_RESET
+#define VERBOSE_MODE
+#define EEPROM_SAVING
+
+//#define RTC_DISPLAY
+//#define RTC_REFRESH 1000
 
 #include <stdint.h>
 #include <Arduino.h>
@@ -38,15 +39,16 @@ struct Message
   char buf[MESSAGE_LEN];
 };
 
+struct HourPlan
+{
+  uint8_t modeId;
+  int minute;
+};
+
 struct DayPlan
 {
   uint8_t jour;
-  uint8_t modeId;
-  uint8_t defaultModeId;
-  char heure1Start[HOUR_LEN];
-  char heure1Stop[HOUR_LEN];
-  char heure2Start[HOUR_LEN];
-  char heure2Stop[HOUR_LEN];
+  HourPlan hourPlans[HOUR_PLAN_LEN];
 };
 
 struct WeekPlan

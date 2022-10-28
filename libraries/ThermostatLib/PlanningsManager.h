@@ -18,16 +18,13 @@
     void displayPlanning();
     DayPlan getDefaultDayPlan();
     WeekPlan getDefaultWeekPlan();    
-   
 
     DayPlan getDayPlan(uint8_t jour);
-    void setDayPlan(DayPlan dp);  
+    DayPlan sortDayPlan(DayPlan dp);
+    bool setDayPlan(DayPlan dp);  
 
     /*****MEMBERS****/
-
     WeekPlan weekPlan;
-   
- 
-};
+ };
 
 #endif

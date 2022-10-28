@@ -1,19 +1,4 @@
-/*
-    MCU = Arduino Pro-mini
-    Radio = NRF24L01+
-    NodeIDWrite="2Mast"
-    NodeIDRead="2Nodw"
-    Sensor = DHT22+etat relais chaudiere
-
-    RadioId = sensor24thermid1
-    Version : 1.2 (17/02/18)
-      - Ajout de la rtc
-    Version : 1.1 (07/02/18)
-      - Ajout des modes et plannings.
-    Version : 1.0 (28/11/18)
-      - Création.
-*/
-
+#include "thermostat_defines.h"
 #include "structures.h"
 #include "nRF24L01.h"
 #include "RF24.h"
@@ -22,7 +7,7 @@
 #include "PlanningsManager.h"
 #include "ThermostatManager.h"
 #include "RTCManager.h"
-#include "Utils.h"~
+#include "Utils.h"
 #include <Wire.h>
 #include <TimeLib.h>
 #include <DS1307RTC.h>
@@ -34,7 +19,7 @@
 #define DHTPIN 4
 #define DHTTYPE DHT22
 #define R_PIPE 1
-#define VERSION 1.22
+#define VERSION 1.3
 
 #define METH_GET "get"
 #define METH_SEL "sel"
@@ -52,15 +37,15 @@
 RF24 radio(CE_PIN, CSN_PIN);
 DHT dht(DHTPIN, DHTTYPE);
 
-long refreshTime = 15000; //millisecondes
-byte sendingTime = 120 / (refreshTime / 1000); //envoi de la temperature par radio
-//tous les 'sendingTime * refreshTime'
-byte currentTime = 1;  //Compteur actuel de 'sendingTime'
+long refreshTime = 15000;                      // millisecondes
+byte sendingTime = 120 / (refreshTime / 1000); // envoi de la temperature par radio
+// tous les 'sendingTime * refreshTime'
+byte currentTime = 1; // Compteur actuel de 'sendingTime'
 
 const int entreeChaudiere = 3;
 const int sortieChaudiere = 2;
 
-bool etatChaudiere; //Etat du relais de la chaudiere
+bool etatChaudiere; // Etat du relais de la chaudiere
 bool dernierEtatChaudiere;
 bool power = true;
 
@@ -79,19 +64,20 @@ PlanningsManager plMan;
 ThermostatManager thMan;
 RTCManager clkMan;
 
-void setup() {
-  strcpy( sensor.id, "sensor24thermid1\0");
+void setup()
+{
+  strcpy(sensor.id, "sensor24thermid1\0");
 
   Serial.begin(115000);
-  Serial.print("- Thermo ver. ");
+  Serial.print(F("- Thermo ver. "));
   Serial.print(VERSION);
-  Serial.println(" -");
+  Serial.println(F(" -"));
   pinMode(entreeChaudiere, INPUT);
   pinMode(sortieChaudiere, OUTPUT);
   digitalWrite(sortieChaudiere, HIGH);
   etatChaudiere = false;
   dernierEtatChaudiere = false;
-  sensor.temp = -273.0;
+  sensor.temp = 273.0;
   flushCommande();
   modMan.initModes();
   plMan.initPlanning();
@@ -101,30 +87,30 @@ void setup() {
   initRadio();
   startTimer();
   dht.begin();
-  Serial.println("Setup OK");
   checkPlanTime();
+  Serial.println("Setup OK");
 }
 
-void loop(void) {
+void loop(void)
+{
 
   t.update();
   etatChaudiere = digitalRead(entreeChaudiere);
-  if ( etatChaudiere != dernierEtatChaudiere) {
+  if (etatChaudiere != dernierEtatChaudiere) {
     envoiEtatChaudiere();
   }
 
-  if ( thMan.getInterne() == 1) {
+  if (thMan.getInterne() == 1) {
     thMan.setTempActuelle(sensor.temp);
+  } else {
+    thMan.setTempActuelle(thMan.getTempExt());
   }
-  else thMan.setTempActuelle(thMan.getTempExt());
 
   if (thMan.getTempActuelle() < (thMan.getConsigne() - thMan.getDelta() / 2)) {
     allumerChaudiere();
-
   } else {
     if (thMan.getTempActuelle() > (thMan.getConsigne() + thMan.getDelta() / 2)) {
       eteindreChaudiere();
-
     }
   }
   dernierEtatChaudiere = etatChaudiere;
@@ -137,12 +123,11 @@ void loop(void) {
   }
 }
 
-void checkPlanTime() {
-
+void checkPlanTime()
+{
   if (thMan.getPlan() > 0) {
     readRTC();
     DayPlan dp;
-    int tm[4];
 
     if (clkMan.tm.Wday >= 0 && clkMan.tm.Wday <= 7) {
       dp = plMan.getDayPlan(clkMan.tm.Wday);
@@ -151,26 +136,21 @@ void checkPlanTime() {
       return;
     }
 
-    tm[0] = hoursToMinutes(dp.heure1Start);
-    tm[1] = hoursToMinutes(dp.heure1Stop);
-    tm[2] = hoursToMinutes(dp.heure2Start);
-    tm[3] = hoursToMinutes(dp.heure2Stop);
-
     int rtcTime = tmToMinutes(clkMan.tm);
-    uint8_t mode = dp.defaultModeId;
-
-    if ((rtcTime >= tm[0] && rtcTime < tm[1]) ||
-        (rtcTime >= tm[2] && rtcTime < tm[3])
-       )
-    {
-      mode = dp.modeId;
+    uint8_t mode = 1;
+    for (int hPlan = HOUR_PLAN_LEN - 1; hPlan >= 0; hPlan--) {
+      if (rtcTime >= dp.hourPlans[hPlan].minute) {
+        mode = dp.hourPlans[hPlan].modeId;
+        break;
+      }
     }
 
     bindThermostatWithMode(mode);
   }
 }
 
-tmElements_t strToHours(char* str) {
+tmElements_t strToHours(char *str)
+{
   Utils utils;
   tmElements_t tm;
   char separator[] = ":";
@@ -181,48 +161,43 @@ tmElements_t strToHours(char* str) {
   return tm;
 }
 
-int tmToMinutes(tmElements_t tm) {
+int tmToMinutes(tmElements_t tm)
+{
   return tm.Hour * 60 + tm.Minute;
 }
 
-int hoursToMinutes(char* str) {
-  tmElements_t tm = strToHours(str);
-  return tmToMinutes(tm);
-}
-
-
-
-bool radioRead() {
-  if (radio.available()) {
-    uint8_t payloadSize = radio.getDynamicPayloadSize();
-    radio.setPayloadSize(payloadSize);
-    flushCommande();
-    switch (payloadSize) {
-      case sizeof(Thermostat):
-        return bindThermostat();
-      case sizeof(Sensor):
-        return bindSensor();
-      case sizeof(ComStruct):
-        return bindCommande();
-      case sizeof(Mode):
-        return bindMode();
-      case sizeof(DayPlan):
-        return bindDayplan();
-      case sizeof(tmElements_t):
-        return bindRTC();
-      default :
-        radio.flush_rx();
-        flushCommande();
-        return false;
-    }
-
-
+bool radioRead()
+{
+  if (!radio.available()) {
+    return false;
   }
+  uint8_t payloadSize = radio.getDynamicPayloadSize();
+  radio.setPayloadSize(payloadSize);
+  flushCommande();
+  switch (payloadSize) {
+  case sizeof(Thermostat):
+    return bindThermostat();
+  case sizeof(Sensor):
+    return bindSensor();
+  case sizeof(ComStruct):
+    return bindCommande();
+  case sizeof(Mode):
+    return bindMode();
+  case sizeof(DayPlan):
+    return bindDayplan();
+  case sizeof(tmElements_t):
+    return bindRTC();
+  default:
+    radio.flush_rx();
+    flushCommande();
+    return false;
+  }  
 }
 
-bool bindThermostat() {
+bool bindThermostat()
+{
   Thermostat thermostat;
-  radio.read( &thermostat, sizeof(thermostat));
+  radio.read(&thermostat, sizeof(thermostat));
   thMan.setThermostat(thermostat);
   t.after(20, sendThermoCallback);
 #ifdef VERBOSE_MODE
@@ -231,40 +206,52 @@ bool bindThermostat() {
   return true;
 }
 
-void bindThermostatWithMode(uint8_t id) {
+void bindThermostatWithMode(uint8_t id)
+{
+  if (id <= 0) {
+    return;
+  }
   Mode mode;
   mode = modMan.getMode(id);
-
+ if (mode.id <= 0) {
+    return;
+  }
   bool changeMode = false;
   if (mode.id != thMan.getMode()) {
+    #ifdef VERBOSE_MODE
     Serial.print("chg Mod from = ");
-    Serial.println(thMan.getMode());
+    Serial.print(thMan.getMode());
     Serial.print(" to ");
     Serial.println(id);
+    #endif
     changeMode = true;
   }
-
-  if (mode.id > 0) {
-    delayedInfos = thMan.hasChanged(mode);
-    if (delayedInfos)Serial.print("thermo has changed");
-    thMan.setConsigne(mode.consigne);
-    thMan.setDelta(mode.delta);
-    if (changeMode) thMan.setMode(mode.id);
-    thMan.display();
+ 
+  delayedInfos = thMan.hasChanged(mode);
+  if (delayedInfos) {
+  #ifdef VERBOSE_MODE
+    Serial.print("thermo has changed");
+  #endif
   }
-
+  thMan.setConsigne(mode.consigne);
+  thMan.setDelta(mode.delta);
+  if (changeMode) {
+    thMan.setMode(mode.id);
+  }
+  thMan.display();  
 }
 
-bool bindMode() {
+bool bindMode()
+{
   Mode mode;
-  radio.read( &mode, sizeof(mode));
+  radio.read(&mode, sizeof(mode));
   modMan.addMode(mode);
 
   return true;
 }
 
-bool bindSensor() {
-
+bool bindSensor()
+{
   Sensor sensorRecu;
   radio.read(&sensorRecu, sizeof(sensorRecu));
 
@@ -276,29 +263,29 @@ bool bindSensor() {
   return true;
 }
 
-bool bindCommande() {
-
-  radio.read( &commande, sizeof(commande));
+bool bindCommande()
+{
+  radio.read(&commande, sizeof(commande));
 
   int id;
   delay(2);
-  //GET
+  // GET
   if (strcmp(commande.meth, METH_GET) == 0) {
 
-    //INFO
+    // INFO
     if (strcmp(commande.key, KEY_INFO) == 0) {
       delayedInfos = true;
       flushCommande();
       return true;
     }
 
-    //PWR
+    // PWR
     if (strcmp(commande.key, KEY_PWR) == 0) {
       sendPowerState();
       return true;
     }
 
-    //MODE
+    // MODE
     if (strcmp(commande.key, KEY_MODE) == 0) {
       delayedInfos = false;
       id = atoi(commande.buf);
@@ -314,7 +301,7 @@ bool bindCommande() {
       }
     }
 
-    //PLAN
+    // PLAN
     if (strcmp(commande.key, KEY_PLAN) == 0) {
       delayedInfos = false;
 
@@ -323,9 +310,12 @@ bool bindCommande() {
       stopTimer();
       if (id < 254) {
         DayPlan dp = plMan.getDayPlan(id);
+#ifdef VERBOSE_MODE
+        Serial.print("before sendDayplan : ");
+        Serial.println(dp.jour);
+#endif
         if (dp.jour > 0) {
           sendDayplan(dp);
-
         }
       } else {
         for (byte i = 0; i < WEEK_LEN; i++) {
@@ -335,48 +325,50 @@ bool bindCommande() {
       }
       startTimer();
     }
-    //RTC
+    // RTC
     if (strcmp(commande.key, KEY_RTC) == 0) {
       sendRTC(clkMan.read());
     }
   }
-  //SEL
+  // SEL
   if (strcmp(commande.meth, METH_SEL) == 0) {
-    //MODE
+    // MODE
     if (strcmp(commande.key, KEY_MODE) == 0) {
       delayedInfos = true;
       int id = atoi(commande.buf);
-      if (id > 0 && thMan.getPlan() <= 0) bindThermostatWithMode(id);
-      else sendMessage("tht pon");
+      if (id > 0 && thMan.getPlan() <= 0)
+        bindThermostatWithMode(id);
+      else
+        sendMessage("tht pon");
     }
   }
 
-  //SET
+  // SET
   if (strcmp(commande.meth, METH_SET) == 0) {
-    //PLAN
+    // PLAN
     if (strcmp(commande.key, KEY_PLAN) == 0) {
       delayedInfos = false;
       int id = atoi(commande.buf);
-      if (id > 0) thMan.setPlan(id);
+      if (id > 0)
+        thMan.setPlan(id);
     }
-    //PWR
+    // PWR
     if (strcmp(commande.key, KEY_PWR) == 0) {
       delayedInfos = false;
       int id = atoi(commande.buf);
       if (id >= 0 && id <= 1) {
         power = !!id;
-        if(!power) {
+        if (!power) {
           eteindreChaudiere();
         }
-        
         sendPowerState();
       }
     }
   }
 
-  //SAVE
+  // SAVE
   if (strcmp(commande.meth, METH_SAVE) == 0) {
-    //PLAN
+    // PLAN
     if (strcmp(commande.key, KEY_PLAN) == 0) {
       delayedInfos = true;
       plMan.savePlanningInEEPROM();
@@ -384,7 +376,7 @@ bool bindCommande() {
       sendMessage("tht spok");
     }
 
-    //MODE
+    // MODE
     if (strcmp(commande.key, KEY_MODE) == 0) {
       delayedInfos = true;
       modMan.saveModesInEEPROM();
@@ -397,99 +389,133 @@ bool bindCommande() {
   return false;
 }
 
-void sendPowerState() {
-  char * str;
-  if(power) str = "tht pow 1\0";
-  else str="tht pow 0\0";
+void sendPowerState()
+{
+  char *str;
+  if (power)
+    str = "tht pow 1\0";
+  else
+    str = "tht pow 0\0";
 
   sendMessage(str);
 }
 
-bool bindDayplan() {
-  DayPlan dp;
-  stopTimer();
-  radio.read( &dp, sizeof(DayPlan));
-  plMan.setDayPlan(dp);
+bool bindDayplan()
+{
+  stopTimer();  
+  DayPlan receivedDayPlan;
+  radio.read(&receivedDayPlan, sizeof(DayPlan));
+  if(plMan.setDayPlan(receivedDayPlan)) {
+    Serial.println("* dp set * ");
+    sendDayplan(plMan.getDayPlan(receivedDayPlan.jour));
+  }
 
   startTimer();
   return true;
 }
 
-bool bindRTC() {
+bool bindRTC()
+{
   tmElements_t tm;
-  radio.read( &tm, sizeof(tmElements_t));
+  radio.read(&tm, sizeof(tmElements_t));
   clkMan.display();
-  if (clkMan.write(tm)) sendRTC(tm);
+  if (clkMan.write(tm))
+    sendRTC(tm);
   return true;
 }
 
-void sendMode(Mode mode) {
+void sendMode(Mode mode)
+{
   radio.stopListening();
   delay(100);
   radio.setPayloadSize(sizeof(Mode));
-  radio.write( &mode, sizeof(Mode));
+  radio.write(&mode, sizeof(Mode));
   radio.startListening();
 }
 
-void sendDayplan(DayPlan dayPlan) {
-
+void sendDayplan(DayPlan dayPlan)
+{
   radio.stopListening();
+  delay(100);
   radio.setPayloadSize(sizeof(DayPlan));
-  radio.write( &dayPlan, sizeof(DayPlan));
+  radio.write(&dayPlan, sizeof(DayPlan));
+  displayDayplan(dayPlan);
   radio.startListening();
 }
 
-void sendRTC(tmElements_t tm) {
+void displayDayplan(DayPlan dayPlan)
+{
+#ifdef VERBOSE_MODE
+  Serial.print("sendDayplan : ");
+  Serial.println(sizeof(DayPlan));
+  Serial.print("dayPlan : ");
+  Serial.print(dayPlan.jour);
+  Serial.print(" -> ");
+  for(int i=0; i< HOUR_PLAN_LEN ; i++) {
+    Serial.print(dayPlan.hourPlans[i].minute);
+    Serial.print("-");
+    Serial.print(dayPlan.hourPlans[i].modeId);
+    Serial.print(" | ");
+  }
+  Serial.println();
+#endif
+}
+
+void sendRTC(tmElements_t tm)
+{
   radio.stopListening();
   delay(100);
   radio.setPayloadSize(sizeof(tmElements_t));
-  radio.write( &tm, sizeof(tmElements_t));
+  radio.write(&tm, sizeof(tmElements_t));
   radio.startListening();
 }
 
-void sendMessage(char* str) {
+void sendMessage(char *str)
+{
   radio.stopListening();
   delay(100);
   Message message;
   strcpy(message.buf, str);
   radio.setPayloadSize(sizeof(Message));
-  radio.write( &message, sizeof(Message));
+  radio.write(&message, sizeof(Message));
   Serial.println(message.buf);
   radio.startListening();
 }
 
-void capteurToString() {
-#ifdef VERBOSE_MODE
-  Serial.print(F( "ID: "));
+void capteurToString()
+{
+  Serial.print(F("ID: "));
   Serial.print(sensor.id);
-  Serial.print(F( " Tmp: "));
-  Serial.print( sensor.temp);
-  Serial.print(F( " Hyg: "));
+  Serial.print(F(" Tmp: "));
+  Serial.print(sensor.temp);
+  Serial.print(F(" Hyg: "));
   Serial.println(sensor.hygro);
-#endif
 }
 
-void initRadio() {
-  byte addressWrite[6] = "2Mast";
-  byte addressRead[6] = "2Nodw";
+void initRadio()
+{
+  byte addressWrite[6] = WRITE_PIPE;
+  byte addressRead[6] = READ_PIPE;
 
-  radio.begin(); // Start up the radio
-  radio.setAutoAck(1); // Ensure autoACK is enabled
+  radio.begin();            // Start up the radio
+  radio.setAutoAck(1);      // Ensure autoACK is enabled
   radio.setRetries(15, 15); // Max delay between retries & number of retries
   radio.openWritingPipe(addressWrite);
   radio.openReadingPipe(R_PIPE, addressRead);
-  radio.setPALevel( RF24_PA_HIGH);
+  radio.setPALevel(RF24_PA_HIGH);
   radio.setChannel(108);
   radio.setDataRate(RF24_250KBPS);
   radio.enableDynamicPayloads();
   radio.enableAckPayload();
   radio.startListening();
+  radio.flush_rx();
 }
 
-void radioSend() {
+void radioSend()
+{
   radio.stopListening();
   radio.setPayloadSize(sizeof(sensor));
-  radio.write( &sensor, sizeof(sensor) );
+  radio.write(&sensor, sizeof(sensor));
   delay(300);
   sendInfos(false);
 #ifdef VERBOSE_MODE
@@ -500,17 +526,21 @@ void radioSend() {
   radio.startListening();
 }
 
-void sendThermoCallback() {
+void sendThermoCallback()
+{
   sendInfos(true);
 }
 
-void sendAllCallback() {
+void sendAllCallback()
+{
   checkPlanTime();
   radioSend();
 }
 
-void sendInfos(bool stopStart) {
-  if (stopStart)radio.stopListening();
+void sendInfos(bool stopStart)
+{
+  if (stopStart)
+    radio.stopListening();
   Thermostat thermostat = thMan.getThermostat();
 
 #ifdef VERBOSE_MODE
@@ -519,37 +549,42 @@ void sendInfos(bool stopStart) {
   Serial.println(F("---"));
 #endif
   radio.setPayloadSize(sizeof(Thermostat));
-  radio.write( &thermostat, sizeof(Thermostat) );
-  if (stopStart)radio.startListening();
+  radio.write(&thermostat, sizeof(Thermostat));
+  if (stopStart)
+    radio.startListening();
 }
 
-void allumerChaudiere() {
+void allumerChaudiere()
+{
   if (power) {
     digitalWrite(sortieChaudiere, LOW);
   }
 }
 
-void eteindreChaudiere() {
+void eteindreChaudiere()
+{
   digitalWrite(sortieChaudiere, HIGH);
 }
 
-void envoiEtatChaudiere() {
+void envoiEtatChaudiere()
+{
   measure();
   radioSend();
 }
 
-void startTimer() {
+void startTimer()
+{
   timerEvent = t.every(refreshTime, measureAndSend);
   timerEventCheckPlan = t.every(CHK_PL_TIME, checkPlanTime);
-
-
 }
-void stopTimer() {
+void stopTimer()
+{
   t.stop(timerEvent);
   t.stop(timerEventCheckPlan);
 }
 
-void measureAndSend() {
+void measureAndSend()
+{
   measure();
   if (currentTime >= sendingTime) {
     radioSend();
@@ -559,10 +594,12 @@ void measureAndSend() {
   }
 }
 
-void measure() {
-
-  if (etatChaudiere)thMan.setEtat(0.0);
-  else thMan.setEtat(1.0);
+void measure()
+{
+  if (etatChaudiere)
+    thMan.setEtat(0.0);
+  else
+    thMan.setEtat(1.0);
 
   stopTimer();
   radio.stopListening();
@@ -593,15 +630,15 @@ void measure() {
   startTimer();
 }
 
-void flushCommande() {
+void flushCommande()
+{
   for (byte i = 0; i < BUF_LEN; i++) {
     commande.buf[i] = 0x00;
   }
 }
 
-
-tmElements_t readRTC() {
-
+tmElements_t readRTC()
+{
   tmElements_t tm = clkMan.read();
   clkMan.display();
   return tm;

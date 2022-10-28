@@ -53,7 +53,3 @@
 
 #define WRITE_PIPES {(byte*)"1Nodw",(byte*)"2Nodw",(byte*)"3Nodw",(byte*)"4Nodw",(byte*)"5Nodw"}
 #define READ_PIPES {(byte*)"1Mast",(byte*)"2Mast",(byte*)"3Mast",(byte*)"4Mast",(byte*)"5Mast"}
-
-
-
- 

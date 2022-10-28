@@ -1,124 +1,148 @@
 #include "PlanningsManager.h"
 
-void PlanningsManager::initPlanning(){
-
-	#ifdef FACTORY_RESET
-      setDefaultPlanning();
-      delay(10); 
-	    #ifdef EEPROM_SAVING
-	      savePlanningInEEPROM();
-	      delay(10);   
-	    #endif
-  	#else
-	    #ifdef  EEPROM_SAVING
-	      loadPlanningFromEEPROM(); 
-	      delay(10); 
-	    #endif
-  	#endif	
-
-  	displayPlanning();
-  	delay(10);
-  	
+void PlanningsManager::initPlanning()
+{
+#ifdef FACTORY_RESET
+	setDefaultPlanning();
+	delay(10);
+#ifdef EEPROM_SAVING
+	savePlanningInEEPROM();
+	delay(10);
+#endif
+#else
+#ifdef EEPROM_SAVING
+	loadPlanningFromEEPROM();
+	delay(10);
+#endif
+#endif
+	displayPlanning();
+	delay(10);
 }
 
-void PlanningsManager::setDefaultPlanning(){
-	this->weekPlan=getDefaultWeekPlan();	
+void PlanningsManager::setDefaultPlanning()
+{
+	this->weekPlan = getDefaultWeekPlan();
 }
 
-int PlanningsManager::savePlanningInEEPROM(){
-
-  Serial.print("- svPlanEEP: ");
-  int bytesWritten = EEPROM_writeAnything(EEP_PLA_IDX,this->weekPlan);
-  Serial.println(bytesWritten);  
-  return bytesWritten;
+int PlanningsManager::savePlanningInEEPROM()
+{
+	Serial.print("- svPlanEEP: ");
+	int bytesWritten = EEPROM_writeAnything(EEP_PLA_IDX, this->weekPlan);
+	Serial.println(bytesWritten);
+	return bytesWritten;
 }
 
-int PlanningsManager::loadPlanningFromEEPROM(){
-
-  Serial.print("-ldPlanEEP: ");
-  int bytesRead = EEPROM_readAnything(EEP_PLA_IDX,this->weekPlan);  
-  Serial.println(bytesRead);  
-  return bytesRead;
-  
+int PlanningsManager::loadPlanningFromEEPROM()
+{
+	Serial.print("-ldPlanEEP: ");
+	int bytesRead = EEPROM_readAnything(EEP_PLA_IDX, this->weekPlan);
+	Serial.println(bytesRead);
+	return bytesRead;
 }
 
-void PlanningsManager::displayPlanning(){
-
+void PlanningsManager::displayPlanning()
+{
 	Serial.print("-PLAN ");
 	Serial.println(this->weekPlan.id);
-	for(int j=0;j<WEEK_LEN;j++){
+	for (int j = 0; j < WEEK_LEN; j++)
+	{
 		DayPlan dp = this->weekPlan.dayPlans[j];
-		Serial.print("J : ");
+		Serial.print("J:");
 		Serial.print(dp.jour);
-		Serial.print(" mId : ");
-		Serial.print(dp.modeId);
-		Serial.print(" dfMId : ");
-		Serial.print(dp.defaultModeId);
-		Serial.print(" h1Stt : ");
-		Serial.print(dp.heure1Start);
-		Serial.print(" h1Stp : ");
-		Serial.print(dp.heure1Stop);
-		Serial.print(" h2Stt : ");
-		Serial.print(dp.heure2Start);
-		Serial.print(" h2Stp : ");
-		Serial.println(dp.heure2Stop);
-	}
-	
-  
-}
-
-DayPlan PlanningsManager::getDefaultDayPlan(){
-		DayPlan dp;
-		dp.jour=1;
-		dp.modeId=1;
-		dp.defaultModeId=2;
-		strcpy(dp.heure1Start,"05:00");
-		strcpy(dp.heure1Stop,"08:00");
-		strcpy(dp.heure2Start,"17:00");
-		strcpy(dp.heure2Stop,"23:00");
-
-		return dp;
-}
-
-WeekPlan PlanningsManager::getDefaultWeekPlan(){
-
-	DayPlan dp = getDefaultDayPlan();
-
-	WeekPlan weekPlan;
-	weekPlan.id=1;
-  	for(int day=1;day<=WEEK_LEN;day++){
-		if(day>0 && day<=WEEK_LEN){
-		dp.jour=day;
-		weekPlan.dayPlans[day-1]=dp;
-		}  
-	}
-  	return weekPlan;
-} 
-
-
-DayPlan PlanningsManager::getDayPlan(uint8_t jour){
-	
-	DayPlan dp;	
-	dp.jour=7;
-
-    if(jour==0) jour=7;
-	for(int day=0;day<WEEK_LEN;day++){
-		if(this->weekPlan.dayPlans[day].jour==jour){
-			return this->weekPlan.dayPlans[day];
+		Serial.print(" | ");
+		for (int k = 0; k < HOUR_PLAN_LEN; k++)
+		{
+			Serial.print("H:");
+			Serial.print(dp.hourPlans[k].minute);
+			Serial.print(" m:");
+			Serial.print(dp.hourPlans[k].modeId);
+			Serial.print(" | ");
 		}
-	}	
+		Serial.println("");
+	}
+}
+
+DayPlan PlanningsManager::getDefaultDayPlan()
+{
+	DayPlan dp;
+	dp.jour = 1;
+
+	dp.hourPlans[0].minute = 300;
+	dp.hourPlans[0].modeId = 1;
+	dp.hourPlans[1].minute = 480;
+	dp.hourPlans[1].modeId = 2;
+	dp.hourPlans[2].minute = 1020;
+	dp.hourPlans[2].modeId = 1;
+	dp.hourPlans[3].minute = 1380;
+	dp.hourPlans[3].modeId = 2;
+	for (int i = 4; i < HOUR_PLAN_LEN; i++) {
+		dp.hourPlans[i].minute = 1999;
+		dp.hourPlans[i].modeId = 0;
+	}
+
 	return dp;
 }
 
-void PlanningsManager::setDayPlan(DayPlan dp){   
+WeekPlan PlanningsManager::getDefaultWeekPlan()
+{
+	DayPlan dp = getDefaultDayPlan();
 
-	for(int day=0;day<WEEK_LEN;day++){
-		if(this->weekPlan.dayPlans[day].jour==dp.jour){
-			this->weekPlan.dayPlans[day]=dp;
-			Serial.println("* dp set * ");
+	WeekPlan weekPlan;
+	weekPlan.id = 1;
+	for (int day = 1; day <= WEEK_LEN; day++) {
+		if (day > 0 && day <= WEEK_LEN) {
+			dp.jour = day;
+			weekPlan.dayPlans[day - 1] = dp;
 		}
-	}	
+	}
+	return weekPlan;
 }
 
+DayPlan PlanningsManager::getDayPlan(uint8_t jour)
+{
+	DayPlan dp;
+	dp.jour = 7;
 
+	if (jour == 0)
+		jour = 7;
+	for (int day = 0; day < WEEK_LEN; day++) {
+		if (this->weekPlan.dayPlans[day].jour == jour) {
+			return this->weekPlan.dayPlans[day];
+		}
+	}
 
+	return dp;
+}
+
+DayPlan PlanningsManager::sortDayPlan(DayPlan dp)
+{
+	HourPlan temp;    
+    for (byte i = 0; i < HOUR_PLAN_LEN; i++) {     
+        for (byte j = i+1; j < HOUR_PLAN_LEN; j++) {
+           if(dp.hourPlans[i].minute > dp.hourPlans[j].minute) {    
+			   temp = dp.hourPlans[i];    
+               dp.hourPlans[i] = dp.hourPlans[j];    
+               dp.hourPlans[j] = temp;
+           }     
+        }     
+    }    
+
+	return dp;
+}
+
+bool PlanningsManager::setDayPlan(DayPlan dp)
+{
+	for (int day = 0; day < WEEK_LEN; day++) {
+		if (this->weekPlan.dayPlans[day].jour == dp.jour) {
+			for (int i = 0; i < HOUR_PLAN_LEN; i++) {
+				this->weekPlan.dayPlans[day].hourPlans[i].minute = 1999;
+				this->weekPlan.dayPlans[day].hourPlans[i].modeId = 0;
+			}
+			dp=this->sortDayPlan(dp);
+			this->weekPlan.dayPlans[day] = dp;
+			return true;
+		}
+	}
+
+	return false;
+}

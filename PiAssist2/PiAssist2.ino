@@ -1,3 +1,7 @@
+
+#include "domusbox_config.h"
+#include "structures.h"
+#include "Timer.h"
 #include "main.h"
 
 void setup()
@@ -115,18 +119,6 @@ void checkCommands(char *buf)
                     if (strcmp(utils->m_tabString[5], KEY_DELTA) == 0)
                     {
                         sensors24->m_thermostat.delta = atof(utils->m_tabString[6]);
-                        sensors24->radioTransmit(sensors24->m_thermostat);
-                    }
-                    //nrf24/node/2Nodw/ther/set/temp/19.5/
-                    if (strcmp(utils->m_tabString[5], KEY_TEMP) == 0)
-                    {
-                        sensors24->m_thermostat.tempExt = atof(utils->m_tabString[6]);
-                        sensors24->radioTransmit(sensors24->m_thermostat);
-                    }
-                    //nrf24/node/2Nodw/ther/set/int/1/
-                    if (strcmp(utils->m_tabString[5], KEY_INTERNE) == 0)
-                    {
-                        sensors24->m_thermostat.interne = atoi(utils->m_tabString[6]);
                         sensors24->radioTransmit(sensors24->m_thermostat);
                     }
 
@@ -262,13 +254,22 @@ void RTCTherPut()
 void dayPlanPut()
 {
     sensors24->m_dayplan.jour = atoi(utils->m_tabString[6]);
-    sensors24->m_dayplan.modeId = atoi(utils->m_tabString[7]);
-    sensors24->m_dayplan.defaultModeId = atoi(utils->m_tabString[8]);
-    strcpy(sensors24->m_dayplan.heure1Start, utils->m_tabString[9]);
-    strcpy(sensors24->m_dayplan.heure1Stop, utils->m_tabString[10]);
-    strcpy(sensors24->m_dayplan.heure2Start, utils->m_tabString[11]);
-    strcpy(sensors24->m_dayplan.heure2Stop, utils->m_tabString[12]);
-
+    for (byte i = 0; i < HOUR_PLAN_LEN; i++) {
+        byte j = i + 7;
+        if (j >= MAX_TOKEN_SIZE) {
+            break;
+        }
+        int minuteMode = atoi(utils->m_tabString[j]);
+        if (minuteMode == 0) {
+            sensors24->m_dayplan.hourPlans[i].minute = 1999;
+            sensors24->m_dayplan.hourPlans[i].modeId = 0;
+            continue;
+        }
+        int minute = (int)(minuteMode / 10);
+        uint8_t modeId = (uint8_t)(minuteMode % 10);
+        sensors24->m_dayplan.hourPlans[i].minute = minute;
+        sensors24->m_dayplan.hourPlans[i].modeId = modeId;
+    }
     sensors24->radioTransmit(sensors24->m_dayplan);
 }
 
@@ -341,21 +342,17 @@ void bindMode()
 
 void bindDayplan()
 {
-
     String mergedString = "therplan ";
     mergedString += String(sensors24->m_dayplan.jour);
     mergedString += " ";
-    mergedString += String(sensors24->m_dayplan.modeId);
-    mergedString += " ";
-    mergedString += String(sensors24->m_dayplan.defaultModeId);
-    mergedString += " ";
-    mergedString += String(sensors24->m_dayplan.heure1Start);
-    mergedString += " ";
-    mergedString += String(sensors24->m_dayplan.heure1Stop);
-    mergedString += " ";
-    mergedString += String(sensors24->m_dayplan.heure2Start);
-    mergedString += " ";
-    mergedString += String(sensors24->m_dayplan.heure2Stop);
+    for (byte k = 0; k < HOUR_PLAN_LEN; k++) {
+        mergedString += String(sensors24->m_dayplan.hourPlans[k].minute);
+        mergedString += "-";
+        mergedString += String(sensors24->m_dayplan.hourPlans[k].modeId);
+        if(k < HOUR_PLAN_LEN-1) {
+            mergedString += " ";
+        }
+    }
 
     Serial.println(mergedString);
 
