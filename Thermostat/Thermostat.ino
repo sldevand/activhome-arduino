@@ -398,10 +398,25 @@ void sendPowerState()
 
 bool bindDayplan()
 {
-  stopTimer();  
-  DayPlan receivedDayPlan;
+  stopTimer();
+  struct DayPlan receivedDayPlan;
+
   radio.read(&receivedDayPlan, sizeof(DayPlan));
-  if(plMan.setDayPlan(receivedDayPlan)) {
+  //Clean Dayplan as buffer is polluted by former buffer
+  byte j = 254;
+  for (byte i = 0; i < HOUR_PLAN_LEN; i++) {
+    if (receivedDayPlan.hourPlans[i].minute == 1999) {
+      j = i;
+      break;
+    }
+  }
+  if (j != 254) {
+    for (byte i = j; i < HOUR_PLAN_LEN; i++) {
+      receivedDayPlan.hourPlans[i].minute = 1999;
+      receivedDayPlan.hourPlans[i].modeId = 0;
+    }
+  }
+  if (plMan.setDayPlan(receivedDayPlan)) {
     Serial.println("* dp set * ");
     sendDayplan(plMan.getDayPlan(receivedDayPlan.jour));
   }
