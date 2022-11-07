@@ -100,11 +100,7 @@ void loop(void)
     envoiEtatChaudiere();
   }
 
-  if (thMan.getInterne() == 1) {
-    thMan.setTempActuelle(sensor.temp);
-  } else {
-    thMan.setTempActuelle(thMan.getTempExt());
-  }
+  thMan.setTempActuelle(sensor.temp);
 
   if (thMan.getTempActuelle() < (thMan.getConsigne() - thMan.getDelta() / 2)) {
     allumerChaudiere();
@@ -137,7 +133,7 @@ void checkPlanTime()
     }
 
     int rtcTime = tmToMinutes(clkMan.tm);
-    uint8_t mode = 1;
+    uint8_t mode = 0;
     for (int hPlan = HOUR_PLAN_LEN - 1; hPlan >= 0; hPlan--) {
       if (rtcTime >= dp.hourPlans[hPlan].minute) {
         mode = dp.hourPlans[hPlan].modeId;
