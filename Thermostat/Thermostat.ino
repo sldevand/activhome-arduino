@@ -435,26 +435,10 @@ void sendDayplan(DayPlan dayPlan)
   delay(100);
   radio.setPayloadSize(sizeof(DayPlan));
   radio.write(&dayPlan, sizeof(DayPlan));
-  displayDayplan(dayPlan);
-  radio.startListening();
-}
-
-void displayDayplan(DayPlan dayPlan)
-{
 #ifdef VERBOSE_MODE
-  Serial.print("sendDayplan : ");
-  Serial.println(sizeof(DayPlan));
-  Serial.print("dayPlan : ");
-  Serial.print(dayPlan.jour);
-  Serial.print(" -> ");
-  for(int i=0; i< HOUR_PLAN_LEN ; i++) {
-    Serial.print(dayPlan.hourPlans[i].minute);
-    Serial.print("-");
-    Serial.print(dayPlan.hourPlans[i].modeId);
-    Serial.print(" | ");
-  }
-  Serial.println();
+  plMan.displayDayplan(dayPlan);
 #endif
+  radio.startListening();
 }
 
 void sendRTC(tmElements_t tm)

@@ -16,6 +16,7 @@
     int savePlanningInEEPROM();
     int loadPlanningFromEEPROM();
     void displayPlanning();
+    void displayDayplan(DayPlan dayPlan);
     DayPlan getDefaultDayPlan();
     WeekPlan getDefaultWeekPlan();    
 

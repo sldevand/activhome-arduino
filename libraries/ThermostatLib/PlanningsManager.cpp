@@ -62,6 +62,22 @@ void PlanningsManager::displayPlanning()
 	}
 }
 
+void PlanningsManager::displayDayplan(DayPlan dayPlan)
+{
+  Serial.print("sendDayplan : ");
+  Serial.println(sizeof(DayPlan));
+  Serial.print("dayPlan : ");
+  Serial.print(dayPlan.jour);
+  Serial.print(" -> ");
+  for(int i=0; i< HOUR_PLAN_LEN ; i++) {
+    Serial.print(dayPlan.hourPlans[i].minute);
+    Serial.print("-");
+    Serial.print(dayPlan.hourPlans[i].modeId);
+    Serial.print(" | ");
+  }
+  Serial.println();
+}
+
 DayPlan PlanningsManager::getDefaultDayPlan()
 {
 	DayPlan dp;
