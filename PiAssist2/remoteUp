@@ -1,6 +1,0 @@
-#!/bin/bash
-export $(grep -v '^#' .env | xargs)
-scp .pio/build/nanoatmega328/firmware.hex $REMOTE_USER@$REMOTE_HOST:$REMOTE_BUILD_DIR &&
-curl $BEFORE_SEND &&
-$REMOTE_USER@$REMOTE_HOST "$REMOTE_ARDUINO_SCRIPT firmware.hex" &&
-curl $AFTER_SEND

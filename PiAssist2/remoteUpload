@@ -1,0 +1,23 @@
+#!/bin/bash
+
+set -a # automatically export all variables
+source .env
+set +a
+
+if [ "$#" -ne 1 ]; then
+    echo "must have 1 argument (file.hex)"
+    exit -1
+fi
+
+HEX_FILE=$1
+if [ ! -f $HEX_FILE ]; then
+    echo "$HEX_FILE not found!"
+    exit -1
+fi
+
+scp $HEX_FILE $REMOTE_USER@$REMOTE_HOST:$REMOTE_BUILD_DIR &&
+curl $BEFORE_SEND &&
+sleep 1
+ssh $REMOTE_USER@$REMOTE_HOST "avrdude -v -patmega328p -carduino -P/dev/ttyUSB0 -b57600 -D -Uflash:w:$REMOTE_BUILD_DIR/PiAssist2.ino.hex:i" &&
+sleep 1
+curl $AFTER_SEND
