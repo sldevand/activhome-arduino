@@ -44,7 +44,7 @@ boolean MyCC1101::sendDataChacon(long sender, int interruptor, byte data)
 #ifdef LISTENER_MODE
 void MyCC1101::startListeningChacon()
 {
-  setChannel(0x01);
+  setChannel(0x00);
   byte marcState = readMARCState();
   SetIdle();    // Enter IDLE state
   SetReceive(); // Enter RX state
